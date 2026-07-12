@@ -1,0 +1,9 @@
+node_modules
+dist
+
+package-lock.json
+
+test/fixtures
+
+# vendored @pwngh/money: byte-identical to upstream; selfTest is the drift guard
+src/canonical/money.vendored.ts

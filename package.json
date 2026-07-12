@@ -1,0 +1,93 @@
+{
+  "name": "@pwngh/economy-edge",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "imports": {
+    "#src/*": "./src/*",
+    "#test/*": "./test/*"
+  },
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    },
+    "./canonical": {
+      "types": "./dist/canonical/index.d.ts",
+      "default": "./dist/canonical/index.js"
+    },
+    "./ports": {
+      "types": "./dist/ports/index.d.ts",
+      "default": "./dist/ports/index.js"
+    },
+    "./providers/inbound/steam": {
+      "types": "./dist/providers/inbound/steam/index.d.ts",
+      "default": "./dist/providers/inbound/steam/index.js"
+    },
+    "./providers/inbound/meta": {
+      "types": "./dist/providers/inbound/meta/index.d.ts",
+      "default": "./dist/providers/inbound/meta/index.js"
+    },
+    "./providers/inbound/google": {
+      "types": "./dist/providers/inbound/google/index.d.ts",
+      "default": "./dist/providers/inbound/google/index.js"
+    },
+    "./providers/inbound/apple": {
+      "types": "./dist/providers/inbound/apple/index.d.ts",
+      "default": "./dist/providers/inbound/apple/index.js"
+    },
+    "./providers/inbound/pico": {
+      "types": "./dist/providers/inbound/pico/index.d.ts",
+      "default": "./dist/providers/inbound/pico/index.js"
+    },
+    "./providers/outbound/tilia": {
+      "types": "./dist/providers/outbound/tilia/index.d.ts",
+      "default": "./dist/providers/outbound/tilia/index.js"
+    },
+    "./testing": {
+      "types": "./dist/testing/index.d.ts",
+      "default": "./dist/testing/index.js"
+    },
+    "./package.json": "./package.json"
+  },
+  "files": [
+    "dist"
+  ],
+  "description": "The boundary between external payment providers and the ledger: a stateless, bidirectional codec from each provider's money-movement dialect to one canonical vocabulary.",
+  "author": "Preston Neal",
+  "license": "MIT",
+  "repository": "git+https://github.com/pwngh/economy-edge.git",
+  "scripts": {
+    "build": "tsc -p tsconfig.build.json",
+    "test": "node --test \"test/**/*.test.ts\"",
+    "check": "npm run typecheck && npm run lint && npm run format:check && npm run test",
+    "typecheck": "tsc --noEmit",
+    "lint": "eslint .",
+    "format:check": "prettier -c .",
+    "format:write": "prettier -w ."
+  },
+  "devDependencies": {
+    "@eslint/js": "^9.13.0",
+    "@types/node": "^22.0.0",
+    "eslint": "^9.13.0",
+    "eslint-plugin-n": "^17.0.0",
+    "jiti": "^2.0.0",
+    "prettier": "^3.3.3",
+    "typescript": "^6.0.3",
+    "typescript-eslint": "^8.0.0"
+  },
+  "keywords": [
+    "payments",
+    "payouts",
+    "webhooks",
+    "receipt-verification",
+    "reconciliation",
+    "anti-corruption-layer",
+    "steam",
+    "meta",
+    "tilia"
+  ],
+  "engines": {
+    "node": ">=22.18.0"
+  }
+}
