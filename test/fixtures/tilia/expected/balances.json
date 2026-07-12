@@ -1,0 +1,1 @@
+{"status":"Success","message":null,"codes":null,"payload":{"account_id":"acct-integrator","balances":{"USD":{"spendable_balance":{"balance":"150000","display":"$1,500.00"},"spendable":{"balance":"150000","display":"$1,500.00"},"convertible":{"balance":"0","display":"$0.00"}}}}}
