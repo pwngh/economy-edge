@@ -1,7 +1,9 @@
 {
   "name": "@pwngh/economy-edge",
   "version": "0.1.0",
-  "private": true,
+  "publishConfig": {
+    "access": "public"
+  },
   "type": "module",
   "imports": {
     "#src/*": "./src/*",
@@ -59,6 +61,7 @@
   "repository": "git+https://github.com/pwngh/economy-edge.git",
   "scripts": {
     "build": "tsc -p tsconfig.build.json",
+    "prepublishOnly": "npm run check && npm run build",
     "test": "node --test \"test/**/*.test.ts\"",
     "check": "npm run typecheck && npm run lint && npm run format:check && npm run test",
     "typecheck": "tsc --noEmit",
