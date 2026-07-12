@@ -1,0 +1,4 @@
+Description,Transaction Date,Transaction Type,Product Title,Product id,Amount (Buyer Currency),Currency Conversion Rate,Amount (Merchant Currency),Merchant Currency
+GPA.1234-0001,"Jul 2, 2026",Charge,"Credits 1200, starter pack",sku-credits-1200,9.99,1.00,9.99,USD
+GPA.1234-0001,"Jul 2, 2026",Google fee,"Credits 1200, starter pack",sku-credits-1200,-1.50,1.00,-1.50,USD
+GPA.1234-0002,"Jun 1, 2026",Charge,"Credits 600",sku-credits-600,4.99,1.00,4.99,USD
