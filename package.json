@@ -58,7 +58,10 @@
   "description": "The boundary between external payment providers and the ledger: a stateless, bidirectional codec from each provider's money-movement dialect to one canonical vocabulary.",
   "author": "Preston Neal",
   "license": "MIT",
-  "repository": "git+https://github.com/pwngh/economy-edge.git",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/pwngh/economy-edge.git"
+  },
   "scripts": {
     "build": "tsc -p tsconfig.build.json",
     "prepublishOnly": "npm run check && npm run build",
