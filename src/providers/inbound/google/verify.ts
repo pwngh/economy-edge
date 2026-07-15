@@ -14,7 +14,11 @@ import { ok, reject } from '../../../canonical/outcome.ts';
 import { requestJson } from '../../transport.ts';
 import { accessToken, purchaseUrl } from './auth.ts';
 
-import type { CanonicalPurchase, Outcome, RejectReason } from '../../../canonical/index.ts';
+import type {
+  CanonicalPurchase,
+  Outcome,
+  RejectReason,
+} from '../../../canonical/index.ts';
 import type { FetchLike } from '../../fetch.ts';
 import type { RawProof } from '../../../ports/index.ts';
 import type { GoogleConfig } from './config.ts';
@@ -110,10 +114,14 @@ async function fetchPurchase(
     return null;
   }
   if (!response.ok) {
-    throw fault('GOOGLE.VERIFY_FAILED', `Google returned a ${response.status} status.`, {
-      retryable: response.status === 429 || response.status >= 500,
-      detail: { status: response.status },
-    });
+    throw fault(
+      'GOOGLE.VERIFY_FAILED',
+      `Google returned a ${response.status} status.`,
+      {
+        retryable: response.status === 429 || response.status >= 500,
+        detail: { status: response.status },
+      },
+    );
   }
   const record = response.body as {
     purchaseState?: unknown;
@@ -127,9 +135,13 @@ async function fetchPurchase(
     typeof record.orderId !== 'string' ||
     typeof record.purchaseTimeMillis !== 'string'
   ) {
-    throw fault('GOOGLE.MALFORMED_RESPONSE', 'The ProductPurchase is missing required fields.', {
-      detail: { body: response.body },
-    });
+    throw fault(
+      'GOOGLE.MALFORMED_RESPONSE',
+      'The ProductPurchase is missing required fields.',
+      {
+        detail: { body: response.body },
+      },
+    );
   }
   return {
     purchaseState: record.purchaseState,
@@ -150,7 +162,10 @@ async function acknowledge(
       productId: call.proof.productId,
       token: call.proof.purchaseToken,
     })}:acknowledge`,
-    headers: { authorization: `Bearer ${call.token}`, 'content-type': 'application/json' },
+    headers: {
+      authorization: `Bearer ${call.token}`,
+      'content-type': 'application/json',
+    },
     body: '{}',
   });
   return response.ok;
@@ -177,17 +192,33 @@ function canonicalize(
 function narrowProof(proof: unknown): GoogleProof {
   if (proof !== null && typeof proof === 'object') {
     const record = proof as { productId?: unknown; purchaseToken?: unknown };
-    if (typeof record.productId === 'string' && typeof record.purchaseToken === 'string') {
-      return { productId: record.productId, purchaseToken: record.purchaseToken };
+    if (
+      typeof record.productId === 'string' &&
+      typeof record.purchaseToken === 'string'
+    ) {
+      return {
+        productId: record.productId,
+        purchaseToken: record.purchaseToken,
+      };
     }
   }
-  throw fault('GOOGLE.MALFORMED_PROOF', 'A Google proof must carry productId and purchaseToken.', {
-    detail: { proof },
-  });
+  throw fault(
+    'GOOGLE.MALFORMED_PROOF',
+    'A Google proof must carry productId and purchaseToken.',
+    {
+      detail: { proof },
+    },
+  );
 }
 
-function retryableReject(error: unknown): { readonly ok: false; readonly reason: RejectReason } {
-  if (error instanceof Error && (error as { retryable?: unknown }).retryable === true) {
+function retryableReject(error: unknown): {
+  readonly ok: false;
+  readonly reason: RejectReason;
+} {
+  if (
+    error instanceof Error &&
+    (error as { retryable?: unknown }).retryable === true
+  ) {
     return reject('RETRYABLE');
   }
   throw error;

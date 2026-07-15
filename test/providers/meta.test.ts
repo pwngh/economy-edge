@@ -36,7 +36,8 @@ function configWith(doFetch: FetchLike): MetaConfig {
 }
 
 const verifyRoute = (status: number, body: string) => ({
-  when: (url: string, method: string) => url.includes('/verify_entitlement') && method === 'POST',
+  when: (url: string, method: string) =>
+    url.includes('/verify_entitlement') && method === 'POST',
   status,
   body,
 });
@@ -50,7 +51,10 @@ function webhookOf(name: string): RawWebhook {
   return { provider: 'meta', headers: {}, body: fixture('meta', name) };
 }
 
-const proof = { provider: 'meta', proof: { userId: 'usr-1', sku: 'sku-credits-1200' } } as const;
+const proof = {
+  provider: 'meta',
+  proof: { userId: 'usr-1', sku: 'sku-credits-1200' },
+} as const;
 
 describe('meta verify', () => {
   test('verifies an entitlement and canonicalizes the matching purchase', async () => {
@@ -69,7 +73,9 @@ describe('meta verify', () => {
       assert.equal(outcome.value.occurredAt, '2025-07-03T00:00:00.000Z');
       assert.equal(outcome.value.sourceRef, 'meta:purchase:purchase-9001');
     }
-    const verify = requests.find((request) => request.url.includes('/verify_entitlement'));
+    const verify = requests.find((request) =>
+      request.url.includes('/verify_entitlement'),
+    );
     assert.ok(verify?.body.includes('access_token=OC%7Capp-1%7Csecret-1'));
   });
 
@@ -114,8 +120,12 @@ describe('meta verify', () => {
     const { doFetch } = fakeFetch([]);
 
     await assert.rejects(
-      meta(configWith(doFetch)).verify({ provider: 'meta', proof: { sku: 42 } }),
-      (error: unknown) => (error as { code?: string }).code === 'META.MALFORMED_PROOF',
+      meta(configWith(doFetch)).verify({
+        provider: 'meta',
+        proof: { sku: 42 },
+      }),
+      (error: unknown) =>
+        (error as { code?: string }).code === 'META.MALFORMED_PROOF',
     );
   });
 });
@@ -128,16 +138,24 @@ describe('meta parse', () => {
 
     assert.equal(events.length, 1);
     assert.equal(events[0]?.type, 'PURCHASE');
-    assert.equal(events[0]?.providerTxnId, '03f8833e-9c02-4fa0-978f-4cfe91f86bae');
+    assert.equal(
+      events[0]?.providerTxnId,
+      '03f8833e-9c02-4fa0-978f-4cfe91f86bae',
+    );
     assert.deepEqual(events[0]?.amount, usd('9.99'));
   });
 
   test('normalizes refund and chargeback orders with origin attribution', () => {
     const refund = provider.parse!(webhookOf('webhook-order-refunded.json'));
-    const chargeback = provider.parse!(webhookOf('webhook-order-chargebacked.json'));
+    const chargeback = provider.parse!(
+      webhookOf('webhook-order-chargebacked.json'),
+    );
 
     assert.equal(refund[0]?.type, 'REFUND');
-    assert.equal(refund[0]?.originTxnId, '03f8833e-9c02-4fa0-978f-4cfe91f86bae');
+    assert.equal(
+      refund[0]?.originTxnId,
+      '03f8833e-9c02-4fa0-978f-4cfe91f86bae',
+    );
     assert.equal(chargeback[0]?.type, 'CHARGEBACK');
   });
 
@@ -153,7 +171,11 @@ describe('meta parse', () => {
   });
 
   test('surfaces a body that is not an order webhook as Unrecognized', () => {
-    const events = provider.parse!({ provider: 'meta', headers: {}, body: '{"object":"other"}' });
+    const events = provider.parse!({
+      provider: 'meta',
+      headers: {},
+      body: '{"object":"other"}',
+    });
 
     assert.equal(events[0]?.type, 'Unrecognized');
   });
@@ -198,8 +220,11 @@ describe('meta status', () => {
   test('answers UNKNOWN because Meta documents no per-transaction query', async () => {
     const provider = meta(configWith(fakeFetch([]).doFetch));
 
-    assert.deepEqual(await provider.status({ provider: 'meta', providerTxnId: 'x' }), {
-      state: 'UNKNOWN',
-    });
+    assert.deepEqual(
+      await provider.status({ provider: 'meta', providerTxnId: 'x' }),
+      {
+        state: 'UNKNOWN',
+      },
+    );
   });
 });

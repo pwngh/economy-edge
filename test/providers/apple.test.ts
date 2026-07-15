@@ -47,7 +47,10 @@ const transactionRoute = (body: string, status = 200) => ({
   body,
 });
 
-const proof = { provider: 'apple', proof: { transactionId: '2000000123456789' } } as const;
+const proof = {
+  provider: 'apple',
+  proof: { transactionId: '2000000123456789' },
+} as const;
 
 describe('apple verify', () => {
   test('fetches the transaction from Apple and canonicalizes the milliunit price', async () => {
@@ -65,13 +68,18 @@ describe('apple verify', () => {
       assert.equal(outcome.value.productType, 'CONSUMABLE');
     }
     const request = requests.find((entry) => entry.url.includes('/inApps/'));
-    assert.ok(request?.url.startsWith('https://api.storekit-sandbox.apple.com/'));
+    assert.ok(
+      request?.url.startsWith('https://api.storekit-sandbox.apple.com/'),
+    );
     assert.match(request?.headers.authorization ?? '', /^Bearer /);
   });
 
   test('converts milliunit prices per currency exponent', () => {
     assert.deepEqual(amountFromMilliunits(9990, 'USD'), money('USD', 999n));
-    assert.deepEqual(amountFromMilliunits(1_500_000, 'JPY'), money('JPY', 1500n));
+    assert.deepEqual(
+      amountFromMilliunits(1_500_000, 'JPY'),
+      money('JPY', 1500n),
+    );
     assert.deepEqual(amountFromMilliunits(1500, 'KWD'), money('KWD', 1500n));
   });
 
@@ -98,8 +106,9 @@ describe('apple verify', () => {
       transactionRoute(fixture('apple', 'error-unauthenticated.txt'), 401),
     ]);
 
-    await assert.rejects(apple(configWith(doFetch)).verify(proof), (error: unknown) =>
-      hasCode(error, 'APPLE.AUTH_REJECTED'),
+    await assert.rejects(
+      apple(configWith(doFetch)).verify(proof),
+      (error: unknown) => hasCode(error, 'APPLE.AUTH_REJECTED'),
     );
   });
 
@@ -114,7 +123,9 @@ describe('apple verify', () => {
 
 describe('apple status', () => {
   test('answers SETTLED for a transaction Apple returns and UNKNOWN for one it does not', async () => {
-    const settled = fakeFetch([transactionRoute(fixture('apple', 'transaction-info.json'))]);
+    const settled = fakeFetch([
+      transactionRoute(fixture('apple', 'transaction-info.json')),
+    ]);
     const missing = fakeFetch([transactionRoute('', 404)]);
 
     assert.deepEqual(
@@ -145,7 +156,8 @@ describe('apple report', () => {
     },
   });
   const salesRoute = {
-    when: (url: string) => url.includes('/v1/salesReports') && url.includes('2026-07-02'),
+    when: (url: string) =>
+      url.includes('/v1/salesReports') && url.includes('2026-07-02'),
     bodyBytes: new Uint8Array(gzipSync(fixture('apple', 'sales-summary.tsv'))),
   };
 
@@ -158,11 +170,16 @@ describe('apple report', () => {
     });
 
     assert.equal(settlements.length, 1);
-    assert.equal(settlements[0]?.providerTxnId, '2026-07-02:sku-credits-1200:USD:US');
+    assert.equal(
+      settlements[0]?.providerTxnId,
+      '2026-07-02:sku-credits-1200:USD:US',
+    );
     assert.equal(settlements[0]?.granularity, 'sku-day');
     assert.deepEqual(settlements[0]?.net, money('USD', 2097n));
     assert.deepEqual(settlements[0]?.fee, money('USD', 0n));
-    const pull = requests.find((request) => request.url.includes('/v1/salesReports'));
+    const pull = requests.find((request) =>
+      request.url.includes('/v1/salesReports'),
+    );
     assert.ok(
       pull?.url.includes('filter%5BvendorNumber%5D=88888888') ||
         pull?.url.includes('filter[vendorNumber]=88888888'),
@@ -225,7 +242,9 @@ describe('apple report', () => {
     assert.equal(settlements.length, 1);
     const pulledDays = requests
       .filter((request) => request.url.includes('/v1/salesReports'))
-      .map((request) => /reportDate%5D=([0-9-]+)|reportDate\]=([0-9-]+)/.exec(request.url))
+      .map((request) =>
+        /reportDate%5D=([0-9-]+)|reportDate\]=([0-9-]+)/.exec(request.url),
+      )
       .map((match) => match?.[1] ?? match?.[2]);
     assert.deepEqual(pulledDays, ['2026-07-02']);
   });
@@ -259,7 +278,11 @@ describe('apple parse', () => {
   });
 
   test('surfaces a body without a decodable signedPayload as Unrecognized', () => {
-    const events = provider.parse!({ provider: 'apple', headers: {}, body: '{"other":1}' });
+    const events = provider.parse!({
+      provider: 'apple',
+      headers: {},
+      body: '{"other":1}',
+    });
 
     assert.equal(events[0]?.type, 'Unrecognized');
   });

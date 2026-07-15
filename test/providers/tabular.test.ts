@@ -64,9 +64,15 @@ describe('parseDelimited', () => {
         table,
         (rows) => {
           const text = rows
-            .map((columns) => columns.map((value) => encodeField(value, delimiter)).join(delimiter))
+            .map((columns) =>
+              columns
+                .map((value) => encodeField(value, delimiter))
+                .join(delimiter),
+            )
             .join(newline);
-          const expected = rows.filter((columns) => columns.some((value) => value.length > 0));
+          const expected = rows.filter((columns) =>
+            columns.some((value) => value.length > 0),
+          );
 
           const parsed = parseDelimited(text, delimiter);
 

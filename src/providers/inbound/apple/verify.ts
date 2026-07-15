@@ -72,23 +72,35 @@ export async function fetchTransaction(
     return null;
   }
   if (response.status === 401) {
-    throw fault('APPLE.AUTH_REJECTED', 'Apple rejected the App Store Server API token.', {
-      detail: { body: response.text },
-    });
+    throw fault(
+      'APPLE.AUTH_REJECTED',
+      'Apple rejected the App Store Server API token.',
+      {
+        detail: { body: response.text },
+      },
+    );
   }
   if (!response.ok) {
-    throw fault('APPLE.VERIFY_FAILED', `Apple returned a ${response.status} status.`, {
-      retryable: response.status === 429 || response.status >= 500,
-      detail: { status: response.status },
-    });
+    throw fault(
+      'APPLE.VERIFY_FAILED',
+      `Apple returned a ${response.status} status.`,
+      {
+        retryable: response.status === 429 || response.status >= 500,
+        detail: { status: response.status },
+      },
+    );
   }
   const signed = (response.body as { signedTransactionInfo?: unknown } | null)
     ?.signedTransactionInfo;
   const payload = decodeJwsPayload(signed);
   if (payload === null || typeof payload !== 'object') {
-    throw fault('APPLE.MALFORMED_RESPONSE', 'The signed transaction payload did not decode.', {
-      retryable: true,
-    });
+    throw fault(
+      'APPLE.MALFORMED_RESPONSE',
+      'The signed transaction payload did not decode.',
+      {
+        retryable: true,
+      },
+    );
   }
   return payload as Record<string, unknown>;
 }
@@ -98,10 +110,17 @@ function canonicalize(
   payload: Record<string, unknown>,
   productType: ProductType,
 ): CanonicalPurchase {
-  if (typeof payload.price !== 'number' || typeof payload.currency !== 'string') {
-    throw fault('APPLE.PRICE_MISSING', 'The transaction payload carries no price and currency.', {
-      detail: { transactionId },
-    });
+  if (
+    typeof payload.price !== 'number' ||
+    typeof payload.currency !== 'string'
+  ) {
+    throw fault(
+      'APPLE.PRICE_MISSING',
+      'The transaction payload carries no price and currency.',
+      {
+        detail: { transactionId },
+      },
+    );
   }
   return {
     schemaVersion: 1,
@@ -127,13 +146,23 @@ function transactionIdOf(proof: unknown): string {
       return transactionId;
     }
   }
-  throw fault('APPLE.MALFORMED_PROOF', 'An Apple proof must carry transactionId.', {
-    detail: { proof },
-  });
+  throw fault(
+    'APPLE.MALFORMED_PROOF',
+    'An Apple proof must carry transactionId.',
+    {
+      detail: { proof },
+    },
+  );
 }
 
-function retryableReject(error: unknown): { readonly ok: false; readonly reason: RejectReason } {
-  if (error instanceof Error && (error as { retryable?: unknown }).retryable === true) {
+function retryableReject(error: unknown): {
+  readonly ok: false;
+  readonly reason: RejectReason;
+} {
+  if (
+    error instanceof Error &&
+    (error as { retryable?: unknown }).retryable === true
+  ) {
     return reject('RETRYABLE');
   }
   throw error;

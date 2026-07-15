@@ -66,13 +66,19 @@ export function parseCertificate(der: Uint8Array): ParsedCertificate | null {
     namedCurve: curve.namedCurve,
     coordinateSize: curve.coordinateSize,
     signatureHash: hash,
-    signatureDer: der.slice(signatureBits.contentStart + 1, signatureBits.contentEnd),
+    signatureDer: der.slice(
+      signatureBits.contentStart + 1,
+      signatureBits.contentEnd,
+    ),
     notBefore: validity.notBefore,
     notAfter: validity.notAfter,
   };
 }
 
-export function ecdsaDerToRaw(signature: Uint8Array, coordinateSize: number): Uint8Array | null {
+export function ecdsaDerToRaw(
+  signature: Uint8Array,
+  coordinateSize: number,
+): Uint8Array | null {
   const sequence = readTlv(signature, 0);
   if (sequence === null || sequence.tag !== 0x30) {
     return null;
@@ -96,7 +102,10 @@ function spkiTlvOf(bytes: Uint8Array, tbs: Tlv): Tlv | null {
   return spki !== undefined && spki.tag === 0x30 ? spki : null;
 }
 
-function validityOf(bytes: Uint8Array, tbs: Tlv): { notBefore: number; notAfter: number } | null {
+function validityOf(
+  bytes: Uint8Array,
+  tbs: Tlv,
+): { notBefore: number; notAfter: number } | null {
   const fields = childrenOf(bytes, tbs);
   const base = fields[0]?.tag === 0xa0 ? 1 : 0;
   const validity = fields[base + 3];
@@ -116,7 +125,9 @@ function timeOf(bytes: Uint8Array, tlv: Tlv | undefined): number | null {
   if (tlv === undefined || (tlv.tag !== 0x17 && tlv.tag !== 0x18)) {
     return null;
   }
-  const text = String.fromCharCode(...bytes.slice(tlv.contentStart, tlv.contentEnd));
+  const text = String.fromCharCode(
+    ...bytes.slice(tlv.contentStart, tlv.contentEnd),
+  );
   const digits = tlv.tag === 0x17 ? 12 : 14;
   const match = new RegExp(`^(\\d{${digits}})Z$`).exec(text);
   if (match === null) {
@@ -125,7 +136,8 @@ function timeOf(bytes: Uint8Array, tlv: Tlv | undefined): number | null {
   const stamp = match[1]!;
   const yearDigits = digits - 10;
   const shortYear = Number(stamp.slice(0, yearDigits));
-  const year = tlv.tag === 0x17 ? (shortYear >= 50 ? 1900 : 2000) + shortYear : shortYear;
+  const year =
+    tlv.tag === 0x17 ? (shortYear >= 50 ? 1900 : 2000) + shortYear : shortYear;
   const rest = stamp.slice(yearDigits);
   return Date.UTC(
     year,
@@ -158,7 +170,10 @@ function curveOf(
   return null;
 }
 
-function hashOf(bytes: Uint8Array, signatureAlgorithm: Tlv): 'SHA-256' | 'SHA-384' | null {
+function hashOf(
+  bytes: Uint8Array,
+  signatureAlgorithm: Tlv,
+): 'SHA-256' | 'SHA-384' | null {
   const [oid] = childrenOf(bytes, signatureAlgorithm);
   if (oidMatches(bytes, oid, ECDSA_SHA256_OID)) {
     return 'SHA-256';
@@ -169,8 +184,16 @@ function hashOf(bytes: Uint8Array, signatureAlgorithm: Tlv): 'SHA-256' | 'SHA-38
   return null;
 }
 
-function oidMatches(bytes: Uint8Array, tlv: Tlv | undefined, oid: number[]): boolean {
-  if (tlv === undefined || tlv.tag !== 0x06 || tlv.contentEnd - tlv.contentStart !== oid.length) {
+function oidMatches(
+  bytes: Uint8Array,
+  tlv: Tlv | undefined,
+  oid: number[],
+): boolean {
+  if (
+    tlv === undefined ||
+    tlv.tag !== 0x06 ||
+    tlv.contentEnd - tlv.contentStart !== oid.length
+  ) {
     return false;
   }
   for (let index = 0; index < oid.length; index += 1) {
@@ -181,7 +204,11 @@ function oidMatches(bytes: Uint8Array, tlv: Tlv | undefined, oid: number[]): boo
   return true;
 }
 
-function integerBytes(bytes: Uint8Array, tlv: Tlv | undefined, size: number): Uint8Array | null {
+function integerBytes(
+  bytes: Uint8Array,
+  tlv: Tlv | undefined,
+  size: number,
+): Uint8Array | null {
   if (tlv === undefined || tlv.tag !== 0x02) {
     return null;
   }
@@ -207,10 +234,16 @@ function readTlv(bytes: Uint8Array, start: number): Tlv | null {
   if ((first & 0x80) === 0) {
     const contentStart = start + 2;
     const contentEnd = contentStart + first;
-    return contentEnd <= bytes.length ? { tag, start, contentStart, contentEnd } : null;
+    return contentEnd <= bytes.length
+      ? { tag, start, contentStart, contentEnd }
+      : null;
   }
   const lengthBytes = first & 0x7f;
-  if (lengthBytes === 0 || lengthBytes > 3 || start + 2 + lengthBytes > bytes.length) {
+  if (
+    lengthBytes === 0 ||
+    lengthBytes > 3 ||
+    start + 2 + lengthBytes > bytes.length
+  ) {
     return null;
   }
   let length = 0;
@@ -219,7 +252,9 @@ function readTlv(bytes: Uint8Array, start: number): Tlv | null {
   }
   const contentStart = start + 2 + lengthBytes;
   const contentEnd = contentStart + length;
-  return contentEnd <= bytes.length ? { tag, start, contentStart, contentEnd } : null;
+  return contentEnd <= bytes.length
+    ? { tag, start, contentStart, contentEnd }
+    : null;
 }
 
 function childrenOf(bytes: Uint8Array, parent: Tlv): Tlv[] {

@@ -37,7 +37,10 @@ describe('zipEntries', () => {
     const entries = await zipEntries(zip);
 
     assert.deepEqual(
-      entries.map((entry) => ({ name: entry.name, text: new TextDecoder().decode(entry.bytes) })),
+      entries.map((entry) => ({
+        name: entry.name,
+        text: new TextDecoder().decode(entry.bytes),
+      })),
       [
         { name: 'a.csv', text: 'x,y\n1,2\n' },
         { name: 'b.csv', text: 'p,q\n3,4\n' },
@@ -59,7 +62,11 @@ describe('zipEntries', () => {
   test('refuses an empty or truncated archive with a malformed fault, never a range error', async () => {
     const zip = buildZip([{ name: 'a.csv', content: 'x,y\n1,2\n' }]);
 
-    for (const bytes of [new Uint8Array(0), new Uint8Array(10), zip.slice(0, zip.length - 4)]) {
+    for (const bytes of [
+      new Uint8Array(0),
+      new Uint8Array(10),
+      zip.slice(0, zip.length - 4),
+    ]) {
       await assert.rejects(zipEntries(bytes), (error: unknown) =>
         hasCode(error, 'ARCHIVE.MALFORMED'),
       );
@@ -71,7 +78,9 @@ describe('zipEntries', () => {
     const view = new DataView(zip.buffer, zip.byteOffset, zip.byteLength);
     view.setUint32(endRecordOffset(zip) + 16, zip.length - 8, true);
 
-    await assert.rejects(zipEntries(zip), (error: unknown) => hasCode(error, 'ARCHIVE.MALFORMED'));
+    await assert.rejects(zipEntries(zip), (error: unknown) =>
+      hasCode(error, 'ARCHIVE.MALFORMED'),
+    );
   });
 
   test('refuses zip64 markers with an unsupported fault instead of misreading them', async () => {
@@ -87,8 +96,9 @@ describe('zipEntries', () => {
   test('refuses an entry whose declared size exceeds the cap before inflating it', async () => {
     const zip = buildZip([{ name: 'a.csv', content: 'x'.repeat(100) }]);
 
-    await assert.rejects(zipEntries(zip, { maxEntryBytes: 8 }), (error: unknown) =>
-      hasCode(error, 'ARCHIVE.ENTRY_TOO_LARGE'),
+    await assert.rejects(
+      zipEntries(zip, { maxEntryBytes: 8 }),
+      (error: unknown) => hasCode(error, 'ARCHIVE.ENTRY_TOO_LARGE'),
     );
   });
 
@@ -97,8 +107,9 @@ describe('zipEntries', () => {
     const view = new DataView(zip.buffer, zip.byteOffset, zip.byteLength);
     view.setUint32(centralDirectoryOffset(zip) + 24, 4, true);
 
-    await assert.rejects(zipEntries(zip, { maxEntryBytes: 64 }), (error: unknown) =>
-      hasCode(error, 'COMPRESSION.OUTPUT_TOO_LARGE'),
+    await assert.rejects(
+      zipEntries(zip, { maxEntryBytes: 64 }),
+      (error: unknown) => hasCode(error, 'COMPRESSION.OUTPUT_TOO_LARGE'),
     );
   });
 

@@ -73,7 +73,9 @@ export function compose(adapters: {
   };
 }
 
-function registry<T extends { provider: ProviderId }>(adapters: T[]): Map<ProviderId, T> {
+function registry<T extends { provider: ProviderId }>(
+  adapters: T[],
+): Map<ProviderId, T> {
   const byProvider = new Map<ProviderId, T>();
   for (const adapter of adapters) {
     if (byProvider.has(adapter.provider)) {
@@ -100,7 +102,9 @@ function pick<T>(byProvider: Map<ProviderId, T>, provider: ProviderId): T {
   return adapter;
 }
 
-function composeInbound(byProvider: Map<ProviderId, InboundProvider>): EdgeInbound {
+function composeInbound(
+  byProvider: Map<ProviderId, InboundProvider>,
+): EdgeInbound {
   return {
     verify: async (input) => pick(byProvider, input.provider).verify(input),
     fulfill: async (input) => {
@@ -116,8 +120,12 @@ function composeInbound(byProvider: Map<ProviderId, InboundProvider>): EdgeInbou
     },
     status: async (query) => pick(byProvider, query.provider).status(query),
     report: async (window) => {
-      const reporters = [...byProvider.values()].filter((adapter) => adapter.report !== undefined);
-      const settlements = await Promise.all(reporters.map((adapter) => adapter.report!(window)));
+      const reporters = [...byProvider.values()].filter(
+        (adapter) => adapter.report !== undefined,
+      );
+      const settlements = await Promise.all(
+        reporters.map((adapter) => adapter.report!(window)),
+      );
       return settlements.flat();
     },
     parse: (webhook) => {
@@ -130,14 +138,19 @@ function composeInbound(byProvider: Map<ProviderId, InboundProvider>): EdgeInbou
   };
 }
 
-function composeOutbound(byProvider: Map<ProviderId, OutboundProvider>): EdgeOutbound {
+function composeOutbound(
+  byProvider: Map<ProviderId, OutboundProvider>,
+): EdgeOutbound {
   const sole = (): OutboundProvider => soleOutbound(byProvider);
   return {
     submit: async (request) => sole().submit(request),
     status: async (query) =>
-      'ref' in query ? pick(byProvider, query.ref.provider).status(query) : sole().status(query),
+      'ref' in query
+        ? pick(byProvider, query.ref.provider).status(query)
+        : sole().status(query),
     report: async (window) => sole().report(window),
-    verify: async (webhook) => pick(byProvider, webhook.provider).verify(webhook),
+    verify: async (webhook) =>
+      pick(byProvider, webhook.provider).verify(webhook),
     parse: (webhook) => pick(byProvider, webhook.provider).parse(webhook),
     balance: async () => sole().balance(),
     payee: {
@@ -158,7 +171,9 @@ function composeOutbound(byProvider: Map<ProviderId, OutboundProvider>): EdgeOut
   };
 }
 
-function soleOutbound(byProvider: Map<ProviderId, OutboundProvider>): OutboundProvider {
+function soleOutbound(
+  byProvider: Map<ProviderId, OutboundProvider>,
+): OutboundProvider {
   const adapters = [...byProvider.values()];
   if (adapters.length === 1) {
     return adapters[0]!;

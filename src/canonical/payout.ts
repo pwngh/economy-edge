@@ -26,7 +26,8 @@ export type PayoutResult =
   | { readonly outcome: 'REJECTED'; readonly reason: RejectReason }
   | { readonly outcome: 'INDETERMINATE'; readonly retryable: true };
 
-export type PayoutQuery = { readonly key: string } | { readonly ref: PayoutRef };
+export type PayoutQuery =
+  { readonly key: string } | { readonly ref: PayoutRef };
 
 export interface PayoutStatus {
   readonly state: 'SETTLED' | 'RETURNED' | 'FAILED' | 'PENDING' | 'UNKNOWN';

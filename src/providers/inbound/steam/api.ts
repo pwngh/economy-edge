@@ -16,7 +16,10 @@ import type { FetchLike } from '../../fetch.ts';
 import type { SteamConfig } from './config.ts';
 
 export type SteamCall =
-  | { readonly result: 'ok'; readonly params: Readonly<Record<string, unknown>> }
+  | {
+      readonly result: 'ok';
+      readonly params: Readonly<Record<string, unknown>>;
+    }
   | { readonly result: 'failure'; readonly errorcode: number };
 
 export async function steamGet(
@@ -46,18 +49,27 @@ export async function steamPost(
 }
 
 function interfaceUrl(config: SteamConfig): string {
-  const name = config.environment === 'sandbox' ? 'ISteamMicroTxnSandbox' : 'ISteamMicroTxn';
+  const name =
+    config.environment === 'sandbox'
+      ? 'ISteamMicroTxnSandbox'
+      : 'ISteamMicroTxn';
   return `https://partner.steam-api.com/${name}`;
 }
 
-function encodeParams(config: SteamConfig, params: Record<string, string>): string {
+function encodeParams(
+  config: SteamConfig,
+  params: Record<string, string>,
+): string {
   const withAuth = {
     key: config.publisherWebApiKey,
     appid: String(config.appId),
     ...params,
   };
   return Object.entries(withAuth)
-    .map(([name, value]) => `${encodeURIComponent(name)}=${encodeURIComponent(value)}`)
+    .map(
+      ([name, value]) =>
+        `${encodeURIComponent(name)}=${encodeURIComponent(value)}`,
+    )
     .join('&');
 }
 
@@ -69,20 +81,35 @@ function unwrap(ok: boolean, status: number, body: unknown): SteamCall {
     });
   }
   const envelope = (body as { response?: unknown } | null)?.response;
-  if (envelope === null || envelope === undefined || typeof envelope !== 'object') {
-    throw fault('STEAM.MALFORMED_RESPONSE', 'The Steam response envelope is missing.', {
-      retryable: true,
-    });
+  if (
+    envelope === null ||
+    envelope === undefined ||
+    typeof envelope !== 'object'
+  ) {
+    throw fault(
+      'STEAM.MALFORMED_RESPONSE',
+      'The Steam response envelope is missing.',
+      {
+        retryable: true,
+      },
+    );
   }
-  const record = envelope as { result?: unknown; params?: unknown; error?: unknown };
+  const record = envelope as {
+    result?: unknown;
+    params?: unknown;
+    error?: unknown;
+  };
   if (record.result === 'OK') {
     const params = record.params;
     return {
       result: 'ok',
       params:
-        params !== null && typeof params === 'object' ? (params as Record<string, unknown>) : {},
+        params !== null && typeof params === 'object'
+          ? (params as Record<string, unknown>)
+          : {},
     };
   }
-  const errorcode = (record.error as { errorcode?: unknown } | undefined)?.errorcode;
+  const errorcode = (record.error as { errorcode?: unknown } | undefined)
+    ?.errorcode;
   return { result: 'failure', errorcode: Number(errorcode ?? -1) };
 }

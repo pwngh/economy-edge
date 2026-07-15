@@ -79,7 +79,10 @@ export function payoutStateOf(status: string | null): PayoutStatus['state'] {
   return STATE_BY_STATUS[status] ?? 'UNKNOWN';
 }
 
-export function splitRefId(id: string): { accountId: string; payoutStatusId: string } {
+export function splitRefId(id: string): {
+  accountId: string;
+  payoutStatusId: string;
+} {
   const separator = id.indexOf('/');
   if (separator <= 0 || separator === id.length - 1) {
     throw fault(
@@ -88,5 +91,8 @@ export function splitRefId(id: string): { accountId: string; payoutStatusId: str
       { detail: { id } },
     );
   }
-  return { accountId: id.slice(0, separator), payoutStatusId: id.slice(separator + 1) };
+  return {
+    accountId: id.slice(0, separator),
+    payoutStatusId: id.slice(separator + 1),
+  };
 }

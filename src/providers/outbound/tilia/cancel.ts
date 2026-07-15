@@ -15,7 +15,11 @@ import { requestJson } from '../../transport.ts';
 import { bearerToken, tiliaHosts } from './auth.ts';
 import { splitRefId } from './status.ts';
 
-import type { Outcome, PayoutRef, RejectReason } from '../../../canonical/index.ts';
+import type {
+  Outcome,
+  PayoutRef,
+  RejectReason,
+} from '../../../canonical/index.ts';
 import type { FetchLike } from '../../fetch.ts';
 import type { TiliaConfig } from './config.ts';
 

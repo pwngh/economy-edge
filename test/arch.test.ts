@@ -32,7 +32,9 @@ const ALLOWED: Record<Ring, readonly Ring[]> = {
 
 function ringOf(relativePath: string): Ring {
   const [head] = relativePath.split(sep);
-  return (RINGS as readonly string[]).includes(head ?? '') ? (head as Ring) : 'root';
+  return (RINGS as readonly string[]).includes(head ?? '')
+    ? (head as Ring)
+    : 'root';
 }
 
 function sourceFiles(directory: string): string[] {
@@ -41,13 +43,17 @@ function sourceFiles(directory: string): string[] {
     if (entry.isDirectory()) {
       return sourceFiles(path);
     }
-    return entry.name.endsWith('.ts') && !entry.name.endsWith('.d.ts') ? [path] : [];
+    return entry.name.endsWith('.ts') && !entry.name.endsWith('.d.ts')
+      ? [path]
+      : [];
   });
 }
 
 function importsOf(path: string): string[] {
   const source = readFileSync(path, 'utf8');
-  return [...source.matchAll(/from\s+['"]([^'"]+)['"]/g)].map((match) => match[1]!);
+  return [...source.matchAll(/from\s+['"]([^'"]+)['"]/g)].map(
+    (match) => match[1]!,
+  );
 }
 
 describe('the one law', () => {

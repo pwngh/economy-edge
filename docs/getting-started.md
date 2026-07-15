@@ -31,7 +31,9 @@ import { steam } from '@pwngh/economy-edge/providers/inbound/steam';
 import { tilia } from '@pwngh/economy-edge/providers/outbound/tilia';
 
 const edge = compose({
-  inbound: [steam({ publisherWebApiKey, appId: 438100, environment: 'production' })],
+  inbound: [
+    steam({ publisherWebApiKey, appId: 438100, environment: 'production' }),
+  ],
   outbound: [
     tilia({
       environment: 'production',
@@ -50,7 +52,10 @@ const edge = compose({
 ## First verification
 
 ```ts
-const outcome = await edge.inbound.verify({ provider: 'steam', proof: { orderId } });
+const outcome = await edge.inbound.verify({
+  provider: 'steam',
+  proof: { orderId },
+});
 
 if (outcome.ok) {
   outcome.value; // a CanonicalPurchase — credit your ledger, keyed by its providerTxnId

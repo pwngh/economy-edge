@@ -31,7 +31,8 @@ function configWith(doFetch: FetchLike): SteamConfig {
 }
 
 const finalizeRoute = (body: string) => ({
-  when: (url: string, method: string) => url.includes('/FinalizeTxn/') && method === 'POST',
+  when: (url: string, method: string) =>
+    url.includes('/FinalizeTxn/') && method === 'POST',
   body,
 });
 
@@ -59,7 +60,9 @@ describe('steam verify', () => {
       assert.deepEqual(outcome.value.amount, money('USD', 999n));
       assert.equal(outcome.value.occurredAt, '2026-07-02T12:00:00Z');
     }
-    const finalize = requests.find((request) => request.url.includes('/FinalizeTxn/'));
+    const finalize = requests.find((request) =>
+      request.url.includes('/FinalizeTxn/'),
+    );
     assert.ok(finalize?.url.includes('/ISteamMicroTxnSandbox/'));
     assert.ok(finalize?.body.includes('key=publisher-key'));
     assert.ok(finalize?.body.includes('appid=438100'));
@@ -77,7 +80,9 @@ describe('steam verify', () => {
   });
 
   test('rejects a finalize that missed its time limit as a value', async () => {
-    const { doFetch } = fakeFetch([finalizeRoute(fixture('steam', 'finalize-time-limit.json'))]);
+    const { doFetch } = fakeFetch([
+      finalizeRoute(fixture('steam', 'finalize-time-limit.json')),
+    ]);
 
     const outcome = await steam(configWith(doFetch)).verify(proof);
 
@@ -109,7 +114,8 @@ describe('steam verify', () => {
   test('rejects RETRYABLE when Steam is unavailable', async () => {
     const { doFetch } = fakeFetch([
       {
-        when: (url: string, method: string) => url.includes('/FinalizeTxn/') && method === 'POST',
+        when: (url: string, method: string) =>
+          url.includes('/FinalizeTxn/') && method === 'POST',
         status: 503,
         body: '',
       },
@@ -123,14 +129,16 @@ describe('steam verify', () => {
   test('surfaces the captured HTML 403 for an invalid key as a fault', async () => {
     const { doFetch } = fakeFetch([
       {
-        when: (url: string, method: string) => url.includes('/FinalizeTxn/') && method === 'POST',
+        when: (url: string, method: string) =>
+          url.includes('/FinalizeTxn/') && method === 'POST',
         status: 403,
         body: fixture('steam', 'forbidden-invalid-key.html'),
       },
     ]);
 
-    await assert.rejects(steam(configWith(doFetch)).verify(proof), (error: unknown) =>
-      hasCode(error, 'STEAM.HTTP_FAILED'),
+    await assert.rejects(
+      steam(configWith(doFetch)).verify(proof),
+      (error: unknown) => hasCode(error, 'STEAM.HTTP_FAILED'),
     );
   });
 
@@ -138,7 +146,10 @@ describe('steam verify', () => {
     const { doFetch } = fakeFetch([]);
 
     await assert.rejects(
-      steam(configWith(doFetch)).verify({ provider: 'steam', proof: { orderId: 'DROP TABLE' } }),
+      steam(configWith(doFetch)).verify({
+        provider: 'steam',
+        proof: { orderId: 'DROP TABLE' },
+      }),
       (error: unknown) => hasCode(error, 'STEAM.MALFORMED_PROOF'),
     );
   });
@@ -146,8 +157,12 @@ describe('steam verify', () => {
 
 describe('steam status', () => {
   test('maps QueryTxn statuses onto purchase states', async () => {
-    const succeeded = fakeFetch([queryRoute(fixture('steam', 'query-succeeded.json'))]);
-    const approved = fakeFetch([queryRoute(fixture('steam', 'query-approved.json'))]);
+    const succeeded = fakeFetch([
+      queryRoute(fixture('steam', 'query-succeeded.json')),
+    ]);
+    const approved = fakeFetch([
+      queryRoute(fixture('steam', 'query-approved.json')),
+    ]);
 
     assert.deepEqual(
       await steam(configWith(succeeded.doFetch)).status({
@@ -171,7 +186,10 @@ describe('steam status', () => {
     ]);
 
     assert.deepEqual(
-      await steam(configWith(doFetch)).status({ provider: 'steam', providerTxnId: '999' }),
+      await steam(configWith(doFetch)).status({
+        provider: 'steam',
+        providerTxnId: '999',
+      }),
       { state: 'UNKNOWN' },
     );
   });
@@ -195,7 +213,9 @@ describe('steam report', () => {
     assert.equal(settlements[0]?.providerTxnId, '374839');
     assert.deepEqual(settlements[0]?.gross, money('USD', 999n));
     assert.equal(settlements[0]?.sourceRef, 'steam:order:938473');
-    const report = requests.find((request) => request.url.includes('/GetReport/'));
+    const report = requests.find((request) =>
+      request.url.includes('/GetReport/'),
+    );
     assert.ok(report?.url.includes('type=SETTLEMENT'));
   });
 });

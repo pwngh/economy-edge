@@ -9,7 +9,14 @@
  * @license MIT
  */
 
-export const PROVIDER_IDS = ['steam', 'meta', 'google', 'apple', 'pico', 'tilia'] as const;
+export const PROVIDER_IDS = [
+  'steam',
+  'meta',
+  'google',
+  'apple',
+  'pico',
+  'tilia',
+] as const;
 
 export type ProviderId = (typeof PROVIDER_IDS)[number];
 

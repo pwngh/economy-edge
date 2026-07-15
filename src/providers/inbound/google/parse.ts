@@ -18,7 +18,10 @@ import type { GoogleConfig } from './config.ts';
 
 const ONE_TIME_PURCHASED = 1;
 
-export function parseWebhook(config: GoogleConfig, webhook: RawWebhook): CanonicalEvent[] {
+export function parseWebhook(
+  config: GoogleConfig,
+  webhook: RawWebhook,
+): CanonicalEvent[] {
   const notification = notificationOf(webhook.body);
   if (notification === null) {
     return [unrecognizedEvent('google', webhook)];
@@ -36,7 +39,9 @@ export function parseWebhook(config: GoogleConfig, webhook: RawWebhook): Canonic
 
 function notificationOf(body: string): Record<string, unknown> | null {
   try {
-    const envelope = JSON.parse(body) as { message?: { data?: unknown } } | null;
+    const envelope = JSON.parse(body) as {
+      message?: { data?: unknown };
+    } | null;
     const data = envelope?.message?.data;
     if (typeof data !== 'string') {
       return null;
@@ -83,9 +88,17 @@ function purchaseEventOf(
   };
 }
 
-function voidedEventOf(notification: Record<string, unknown>): CanonicalEvent | null {
-  const voided = notification.voidedPurchaseNotification as { orderId?: unknown } | null;
-  if (voided === null || voided === undefined || typeof voided.orderId !== 'string') {
+function voidedEventOf(
+  notification: Record<string, unknown>,
+): CanonicalEvent | null {
+  const voided = notification.voidedPurchaseNotification as {
+    orderId?: unknown;
+  } | null;
+  if (
+    voided === null ||
+    voided === undefined ||
+    typeof voided.orderId !== 'string'
+  ) {
     return null;
   }
   return {

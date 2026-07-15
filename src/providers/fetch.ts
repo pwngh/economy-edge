@@ -28,9 +28,15 @@ export type FetchLike = (
 
 export const DEFAULT_REQUEST_TIMEOUT_MS = 30_000;
 
-export function withRequestTimeout(doFetch: FetchLike, timeoutMs: number): FetchLike {
+export function withRequestTimeout(
+  doFetch: FetchLike,
+  timeoutMs: number,
+): FetchLike {
   return (url, init) =>
-    doFetch(url, { ...init, signal: init?.signal ?? AbortSignal.timeout(timeoutMs) });
+    doFetch(url, {
+      ...init,
+      signal: init?.signal ?? AbortSignal.timeout(timeoutMs),
+    });
 }
 
 export function configuredFetch(config: {

@@ -60,9 +60,13 @@ async function readChunk(
   try {
     return await reader.read();
   } catch (error) {
-    throw fault('COMPRESSION.MALFORMED', 'The compressed stream did not decode.', {
-      cause: error,
-      detail: { format },
-    });
+    throw fault(
+      'COMPRESSION.MALFORMED',
+      'The compressed stream did not decode.',
+      {
+        cause: error,
+        detail: { format },
+      },
+    );
   }
 }

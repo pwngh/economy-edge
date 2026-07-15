@@ -22,7 +22,10 @@ export function parseWebhook(webhook: RawWebhook): CanonicalEvent[] {
     return [unrecognizedEvent('apple', webhook)];
   }
   const transaction = transactionOf(notification);
-  if (notification.notificationType === 'ONE_TIME_CHARGE' && transaction !== null) {
+  if (
+    notification.notificationType === 'ONE_TIME_CHARGE' &&
+    transaction !== null
+  ) {
     return [
       {
         schemaVersion: 1,
@@ -66,13 +69,18 @@ function notificationOf(body: string): Record<string, unknown> | null {
 function transactionOf(
   notification: Record<string, unknown>,
 ): { transactionId: string; amount?: Money } | null {
-  const signed = (notification.data as { signedTransactionInfo?: unknown } | undefined)
-    ?.signedTransactionInfo;
+  const signed = (
+    notification.data as { signedTransactionInfo?: unknown } | undefined
+  )?.signedTransactionInfo;
   const payload = decodeJwsPayload(signed);
   if (payload === null || typeof payload !== 'object') {
     return null;
   }
-  const record = payload as { transactionId?: unknown; price?: unknown; currency?: unknown };
+  const record = payload as {
+    transactionId?: unknown;
+    price?: unknown;
+    currency?: unknown;
+  };
   if (typeof record.transactionId !== 'string') {
     return null;
   }

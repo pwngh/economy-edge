@@ -28,7 +28,9 @@ import type { RawWebhook } from './raw.ts';
 
 export interface PayeePort {
   status(query: { readonly userId: string }): Promise<PayeeStatus>;
-  onboard(query: { readonly userId: string }): Promise<{ readonly hostedUrl: string }>;
+  onboard(query: {
+    readonly userId: string;
+  }): Promise<{ readonly hostedUrl: string }>;
 }
 
 export interface OutboundProvider {

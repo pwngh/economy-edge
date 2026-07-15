@@ -22,13 +22,21 @@ import { mulberry32 } from '#test/support/propcheck.ts';
 const workDir = mkdtempSync(join(tmpdir(), 'edge-x509-'));
 
 function openssl(command: string): string {
-  return execSync(`openssl ${command}`, { cwd: workDir, stdio: 'pipe' }).toString();
+  return execSync(`openssl ${command}`, {
+    cwd: workDir,
+    stdio: 'pipe',
+  }).toString();
 }
 
 openssl('ecparam -name prime256v1 -genkey -noout -out root.key');
-openssl('req -new -x509 -key root.key -subj /CN=FuzzRoot -days 2 -sha256 -out root.pem');
+openssl(
+  'req -new -x509 -key root.key -subj /CN=FuzzRoot -days 2 -sha256 -out root.pem',
+);
 
-function opensslValidity(name: string): { notBefore: number; notAfter: number } {
+function opensslValidity(name: string): {
+  notBefore: number;
+  notAfter: number;
+} {
   const dates = openssl(`x509 -in ${name} -noout -dates`);
   const notBefore = /notBefore=(.+)/.exec(dates)?.[1];
   const notAfter = /notAfter=(.+)/.exec(dates)?.[1];
@@ -70,10 +78,15 @@ describe('parseCertificate', () => {
       const mutated = validDer.slice();
       const flips = 1 + Math.floor(random() * 8);
       for (let flip = 0; flip < flips; flip += 1) {
-        mutated[Math.floor(random() * mutated.length)] = Math.floor(random() * 256);
+        mutated[Math.floor(random() * mutated.length)] = Math.floor(
+          random() * 256,
+        );
       }
 
-      assert.doesNotThrow(() => parseCertificate(mutated), `iteration ${iteration}`);
+      assert.doesNotThrow(
+        () => parseCertificate(mutated),
+        `iteration ${iteration}`,
+      );
     }
   });
 
@@ -85,7 +98,10 @@ describe('parseCertificate', () => {
         bytes[index] = Math.floor(random() * 256);
       }
 
-      assert.doesNotThrow(() => parseCertificate(bytes), `iteration ${iteration}`);
+      assert.doesNotThrow(
+        () => parseCertificate(bytes),
+        `iteration ${iteration}`,
+      );
     }
   });
 });
@@ -99,7 +115,10 @@ describe('ecdsaDerToRaw', () => {
         bytes[index] = Math.floor(random() * 256);
       }
 
-      assert.doesNotThrow(() => ecdsaDerToRaw(bytes, 32), `iteration ${iteration}`);
+      assert.doesNotThrow(
+        () => ecdsaDerToRaw(bytes, 32),
+        `iteration ${iteration}`,
+      );
     }
   });
 

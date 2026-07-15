@@ -16,7 +16,11 @@ import { columnIndex, parseDelimited } from '../../tabular.ts';
 import { zipEntries } from '../../zip.ts';
 import { accessToken } from './auth.ts';
 
-import type { CanonicalSettlement, Money, Window } from '../../../canonical/index.ts';
+import type {
+  CanonicalSettlement,
+  Money,
+  Window,
+} from '../../../canonical/index.ts';
 import type { FetchLike } from '../../fetch.ts';
 import type { GoogleConfig } from './config.ts';
 
@@ -84,7 +88,11 @@ interface EarningsColumns {
   readonly currency: number | null;
 }
 
-function settlementsOf(rows: string[][], window: Window, month: string): CanonicalSettlement[] {
+function settlementsOf(
+  rows: string[][],
+  window: Window,
+  month: string,
+): CanonicalSettlement[] {
   const [header, ...data] = rows;
   if (header === undefined) {
     return [];
@@ -97,13 +105,20 @@ function settlementsOf(rows: string[][], window: Window, month: string): Canonic
     }
     const description = row[columns.description] ?? '';
     const type = (row[columns.type] ?? '').toLowerCase();
-    const currency = columns.currency === null ? 'USD' : (row[columns.currency] ?? 'USD');
+    const currency =
+      columns.currency === null ? 'USD' : (row[columns.currency] ?? 'USD');
     const amount = moneyFromDecimal(row[columns.amount] ?? '0', currency);
-    const order = orders.get(description) ?? { gross: money(currency, 0n), feeMinor: 0n };
+    const order = orders.get(description) ?? {
+      gross: money(currency, 0n),
+      feeMinor: 0n,
+    };
     if (type === 'charge') {
       orders.set(description, { ...order, gross: amount });
     } else if (type.includes('fee')) {
-      orders.set(description, { ...order, feeMinor: order.feeMinor - amount.minor });
+      orders.set(description, {
+        ...order,
+        feeMinor: order.feeMinor - amount.minor,
+      });
     }
   }
   return [...orders.entries()]
@@ -126,12 +141,27 @@ function earningsColumns(header: string[]): EarningsColumns {
   const date = columnIndex(header, 'Transaction Date');
   const type = columnIndex(header, 'Transaction Type');
   const amount = columnIndex(header, 'Amount (Merchant Currency)');
-  if (description === null || date === null || type === null || amount === null) {
-    throw fault('GOOGLE.REPORT_MALFORMED', 'The earnings CSV is missing required columns.', {
-      detail: { header },
-    });
+  if (
+    description === null ||
+    date === null ||
+    type === null ||
+    amount === null
+  ) {
+    throw fault(
+      'GOOGLE.REPORT_MALFORMED',
+      'The earnings CSV is missing required columns.',
+      {
+        detail: { header },
+      },
+    );
   }
-  return { description, date, type, amount, currency: columnIndex(header, 'Merchant Currency') };
+  return {
+    description,
+    date,
+    type,
+    amount,
+    currency: columnIndex(header, 'Merchant Currency'),
+  };
 }
 
 function withinWindow(dateText: string, window: Window): boolean {
@@ -146,13 +176,21 @@ function monthsInWindow(window: Window): string[] {
   const from = new Date(Date.parse(window.from));
   const to = new Date(Date.parse(window.to));
   const months: string[] = [];
-  const cursor = new Date(Date.UTC(from.getUTCFullYear(), from.getUTCMonth(), 1));
+  const cursor = new Date(
+    Date.UTC(from.getUTCFullYear(), from.getUTCMonth(), 1),
+  );
   while (cursor.getTime() <= to.getTime()) {
-    months.push(`${cursor.getUTCFullYear()}${String(cursor.getUTCMonth() + 1).padStart(2, '0')}`);
+    months.push(
+      `${cursor.getUTCFullYear()}${String(cursor.getUTCMonth() + 1).padStart(2, '0')}`,
+    );
     if (months.length > 12) {
-      throw fault('GOOGLE.REPORT_WINDOW_TOO_WIDE', 'Earnings pulls cover at most 12 months.', {
-        detail: { window },
-      });
+      throw fault(
+        'GOOGLE.REPORT_WINDOW_TOO_WIDE',
+        'Earnings pulls cover at most 12 months.',
+        {
+          detail: { window },
+        },
+      );
     }
     cursor.setUTCMonth(cursor.getUTCMonth() + 1);
   }

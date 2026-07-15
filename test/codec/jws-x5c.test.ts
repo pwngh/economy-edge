@@ -29,7 +29,9 @@ function openssl(command: string): void {
 }
 
 openssl('ecparam -name prime256v1 -genkey -noout -out root.key');
-openssl('req -new -x509 -key root.key -subj /CN=TestRoot -days 2 -sha256 -out root.pem');
+openssl(
+  'req -new -x509 -key root.key -subj /CN=TestRoot -days 2 -sha256 -out root.pem',
+);
 openssl('ecparam -name prime256v1 -genkey -noout -out leaf.key');
 openssl('req -new -key leaf.key -subj /CN=TestLeaf -out leaf.csr');
 openssl(
@@ -71,10 +73,17 @@ function signedPayload(header: Record<string, unknown>): Promise<string> {
 }
 
 function webhookOf(jws: string): RawWebhook {
-  return { provider: 'apple', headers: {}, body: JSON.stringify({ signedPayload: jws }) };
+  return {
+    provider: 'apple',
+    headers: {},
+    body: JSON.stringify({ signedPayload: jws }),
+  };
 }
 
-const pinnedScheme: SignatureScheme = { scheme: 'jws-x5c', rootCertificates: [rootPem] };
+const pinnedScheme: SignatureScheme = {
+  scheme: 'jws-x5c',
+  rootCertificates: [rootPem],
+};
 
 describe('jws-x5c scheme', () => {
   test('accepts a JWS whose chain terminates at the pinned root', async () => {
@@ -87,7 +96,11 @@ describe('jws-x5c scheme', () => {
     const jws = await signedPayload({ alg: 'ES256', x5c: [leafDer, rootDer] });
 
     assert.equal(
-      await verifySignature(pinnedScheme, { provider: 'apple', headers: {}, body: jws }),
+      await verifySignature(pinnedScheme, {
+        provider: 'apple',
+        headers: {},
+        body: jws,
+      }),
       true,
     );
   });
@@ -95,25 +108,34 @@ describe('jws-x5c scheme', () => {
   test('rejects a tampered payload', async () => {
     const jws = await signedPayload({ alg: 'ES256', x5c: [leafDer, rootDer] });
     const [header, , signature] = jws.split('.');
-    const forged = Buffer.from(JSON.stringify({ notificationType: 'REFUND' })).toString(
-      'base64url',
-    );
+    const forged = Buffer.from(
+      JSON.stringify({ notificationType: 'REFUND' }),
+    ).toString('base64url');
 
     assert.equal(
-      await verifySignature(pinnedScheme, webhookOf(`${header}.${forged}.${signature}`)),
+      await verifySignature(
+        pinnedScheme,
+        webhookOf(`${header}.${forged}.${signature}`),
+      ),
       false,
     );
   });
 
   test('rejects a chain that terminates at an unpinned root', async () => {
     const jws = await signedPayload({ alg: 'ES256', x5c: [leafDer, rootDer] });
-    const unpinned: SignatureScheme = { scheme: 'jws-x5c', rootCertificates: [otherRootPem] };
+    const unpinned: SignatureScheme = {
+      scheme: 'jws-x5c',
+      rootCertificates: [otherRootPem],
+    };
 
     assert.equal(await verifySignature(unpinned, webhookOf(jws)), false);
   });
 
   test('rejects a broken chain link', async () => {
-    const jws = await signedPayload({ alg: 'ES256', x5c: [leafDer, pemBody('other-root.pem')] });
+    const jws = await signedPayload({
+      alg: 'ES256',
+      x5c: [leafDer, pemBody('other-root.pem')],
+    });
 
     assert.equal(
       await verifySignature(
@@ -132,7 +154,11 @@ describe('jws-x5c scheme', () => {
 
   test('rejects a body that is neither an envelope nor a JWS', async () => {
     assert.equal(
-      await verifySignature(pinnedScheme, { provider: 'apple', headers: {}, body: 'not a jws' }),
+      await verifySignature(pinnedScheme, {
+        provider: 'apple',
+        headers: {},
+        body: 'not a jws',
+      }),
       false,
     );
   });
@@ -172,7 +198,11 @@ describe('jws-x5c scheme', () => {
     for (const alg of ['none', 'HS256', 'RS256']) {
       const jws = await signedPayload({ alg, x5c: [leafDer, rootDer] });
 
-      assert.equal(await verifySignature(pinnedScheme, webhookOf(jws)), false, `alg ${alg}`);
+      assert.equal(
+        await verifySignature(pinnedScheme, webhookOf(jws)),
+        false,
+        `alg ${alg}`,
+      );
     }
   });
 
@@ -191,7 +221,10 @@ describe('jws-x5c scheme', () => {
 
   test('rejects a chain entry larger than the size cap without decoding it', async () => {
     const oversized = 'A'.repeat(20_000);
-    const jws = await signedPayload({ alg: 'ES256', x5c: [leafDer, oversized] });
+    const jws = await signedPayload({
+      alg: 'ES256',
+      x5c: [leafDer, oversized],
+    });
 
     assert.equal(await verifySignature(pinnedScheme, webhookOf(jws)), false);
   });

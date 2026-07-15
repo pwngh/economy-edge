@@ -53,7 +53,9 @@ const RAIL_KYC_BY_STATE = {
   NONE: 'NONE',
 } as const;
 
-export function tiliaScenario(options: TiliaScenarioOptions = {}): TiliaScenario {
+export function tiliaScenario(
+  options: TiliaScenarioOptions = {},
+): TiliaScenario {
   const hosts = tiliaHosts('staging');
   const { doFetch, requests } = fakeFetch([
     {
@@ -63,7 +65,8 @@ export function tiliaScenario(options: TiliaScenarioOptions = {}): TiliaScenario
     submitRoute(hosts.invoicing, options.submit ?? 'accepted'),
     {
       when: (url, method) =>
-        url === `${hosts.invoicing}/v2/${ACCOUNT_ID}/payout/${PAYOUT_STATUS_ID}` &&
+        url ===
+          `${hosts.invoicing}/v2/${ACCOUNT_ID}/payout/${PAYOUT_STATUS_ID}` &&
         method === 'GET',
       body: JSON.stringify({
         payload: { status: RAIL_STATUS_BY_STATE[options.status ?? 'SETTLED'] },
@@ -71,7 +74,8 @@ export function tiliaScenario(options: TiliaScenarioOptions = {}): TiliaScenario
     },
     {
       when: (url, method) =>
-        url === `${hosts.invoicing}/v2/${ACCOUNT_ID}/payouts` && method === 'GET',
+        url === `${hosts.invoicing}/v2/${ACCOUNT_ID}/payouts` &&
+        method === 'GET',
       body: JSON.stringify({
         payload: [
           {
@@ -79,7 +83,9 @@ export function tiliaScenario(options: TiliaScenarioOptions = {}): TiliaScenario
             status: 'SUCCESS',
             created: DISBURSED_AT,
             credit: {
-              amount: Number(moneyFromDecimal(options.disbursed ?? '2.00', 'USD').minor),
+              amount: Number(
+                moneyFromDecimal(options.disbursed ?? '2.00', 'USD').minor,
+              ),
               currency: 'USD',
             },
           },
@@ -87,13 +93,17 @@ export function tiliaScenario(options: TiliaScenarioOptions = {}): TiliaScenario
       }),
     },
     {
-      when: (url, method) => url === `${hosts.wallets}/balances/${ACCOUNT_ID}` && method === 'GET',
+      when: (url, method) =>
+        url === `${hosts.wallets}/balances/${ACCOUNT_ID}` && method === 'GET',
       body: JSON.stringify({
         payload: {
           balances: {
             USD: {
               spendable_balance: {
-                balance: Number(moneyFromDecimal(options.walletBalance ?? '100.00', 'USD').minor),
+                balance: Number(
+                  moneyFromDecimal(options.walletBalance ?? '100.00', 'USD')
+                    .minor,
+                ),
               },
             },
           },
@@ -102,14 +112,18 @@ export function tiliaScenario(options: TiliaScenarioOptions = {}): TiliaScenario
     },
     {
       when: (url) => url === `${hosts.pii}/v1/kyc/${ACCOUNT_ID}`,
-      body: JSON.stringify({ payload: { state: RAIL_KYC_BY_STATE[options.kyc ?? 'CLEARED'] } }),
+      body: JSON.stringify({
+        payload: { state: RAIL_KYC_BY_STATE[options.kyc ?? 'CLEARED'] },
+      }),
     },
     {
-      when: (url, method) => url === `${hosts.auth}/authorize/user` && method === 'POST',
+      when: (url, method) =>
+        url === `${hosts.auth}/authorize/user` && method === 'POST',
       body: JSON.stringify({
         payload: {
           nonce_auth_id: 'nonce-scenario',
-          redirect: 'https://pub.staging.tilia-inc.com/scenario/payout/nonce-scenario',
+          redirect:
+            'https://pub.staging.tilia-inc.com/scenario/payout/nonce-scenario',
         },
       }),
     },
@@ -125,7 +139,9 @@ export function tiliaScenario(options: TiliaScenarioOptions = {}): TiliaScenario
         sourcePaymentMethodId: 'pm-source-scenario',
         destinationPaymentMethodId: 'pm-destination-scenario',
       }),
-      webhookVerification: options.webhookVerification ?? { scheme: 'transport' },
+      webhookVerification: options.webhookVerification ?? {
+        scheme: 'transport',
+      },
       fetch: doFetch,
     },
     ref: { provider: 'tilia', id: `${ACCOUNT_ID}/${PAYOUT_STATUS_ID}` },
@@ -152,11 +168,17 @@ export function tiliaPayoutWebhookBody(
   });
 }
 
-function submitRoute(invoicing: string, submit: 'accepted' | 'indeterminate' | 'rejected'): Route {
+function submitRoute(
+  invoicing: string,
+  submit: 'accepted' | 'indeterminate' | 'rejected',
+): Route {
   const when = (url: string, method: string) =>
     url === `${invoicing}/v2/${ACCOUNT_ID}/payout` && method === 'POST';
   if (submit === 'accepted') {
-    return { when, body: JSON.stringify({ payload: { payout_status_id: PAYOUT_STATUS_ID } }) };
+    return {
+      when,
+      body: JSON.stringify({ payload: { payout_status_id: PAYOUT_STATUS_ID } }),
+    };
   }
   return { when, status: submit === 'indeterminate' ? 500 : 400 };
 }

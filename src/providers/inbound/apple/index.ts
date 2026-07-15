@@ -31,5 +31,8 @@ export function apple(config: AppleConfig): InboundProvider {
   if (config.reports === undefined) {
     return provider;
   }
-  return { ...provider, report: (window) => salesReport(config, doFetch, window) };
+  return {
+    ...provider,
+    report: (window) => salesReport(config, doFetch, window),
+  };
 }

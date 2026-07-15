@@ -10,7 +10,8 @@
  */
 
 export type Outcome<T, E = string> =
-  { readonly ok: true; readonly value: T } | { readonly ok: false; readonly reason: E };
+  | { readonly ok: true; readonly value: T }
+  | { readonly ok: false; readonly reason: E };
 
 export function ok<T>(value: T): { readonly ok: true; readonly value: T } {
   return { ok: true, value };

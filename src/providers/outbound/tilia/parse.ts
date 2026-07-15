@@ -15,7 +15,9 @@ import { payoutStateOf } from './status.ts';
 import type { CanonicalPayoutEvent } from '../../../canonical/index.ts';
 import type { RawWebhook } from '../../../ports/index.ts';
 
-const KYC_EVENT_BY_STATE: Readonly<Record<string, 'KYC_CLEARED' | 'KYC_BLOCKED'>> = {
+const KYC_EVENT_BY_STATE: Readonly<
+  Record<string, 'KYC_CLEARED' | 'KYC_BLOCKED'>
+> = {
   ACCEPT: 'KYC_CLEARED',
   DENY: 'KYC_BLOCKED',
 };
@@ -45,7 +47,11 @@ function decodeEnvelope(body: string): Decoded | null {
     return null;
   }
   const message = (envelope as { message?: unknown }).message;
-  if (message === null || message === undefined || typeof message !== 'object') {
+  if (
+    message === null ||
+    message === undefined ||
+    typeof message !== 'object'
+  ) {
     return null;
   }
   return { envelope, message: message as Record<string, unknown> };
@@ -95,7 +101,10 @@ function kycEventOf(decoded: Decoded): CanonicalPayoutEvent | null {
   };
 }
 
-function stringField(record: Readonly<Record<string, unknown>>, name: string): string | null {
+function stringField(
+  record: Readonly<Record<string, unknown>>,
+  name: string,
+): string | null {
   const value = record[name];
   return typeof value === 'string' && value.length > 0 ? value : null;
 }

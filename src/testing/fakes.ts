@@ -13,10 +13,15 @@ import { unrecognizedPayoutEvent } from '../canonical/events.ts';
 import { moneyFromDecimal } from '../canonical/money.ts';
 import { ok } from '../canonical/outcome.ts';
 
-import type { CanonicalPurchase, CanonicalSettlement } from '../canonical/index.ts';
+import type {
+  CanonicalPurchase,
+  CanonicalSettlement,
+} from '../canonical/index.ts';
 import type { InboundProvider, OutboundProvider } from '../ports/index.ts';
 
-export function samplePurchase(overrides: Partial<CanonicalPurchase> = {}): CanonicalPurchase {
+export function samplePurchase(
+  overrides: Partial<CanonicalPurchase> = {},
+): CanonicalPurchase {
   return {
     schemaVersion: 1,
     provider: 'steam',
@@ -44,7 +49,9 @@ export function sampleSettlement(
   };
 }
 
-export function fakeInbound(overrides: Partial<InboundProvider> = {}): InboundProvider {
+export function fakeInbound(
+  overrides: Partial<InboundProvider> = {},
+): InboundProvider {
   return {
     provider: 'steam',
     verify: async () => ok(samplePurchase()),
@@ -54,7 +61,9 @@ export function fakeInbound(overrides: Partial<InboundProvider> = {}): InboundPr
   };
 }
 
-export function fakeOutbound(overrides: Partial<OutboundProvider> = {}): OutboundProvider {
+export function fakeOutbound(
+  overrides: Partial<OutboundProvider> = {},
+): OutboundProvider {
   return {
     provider: 'tilia',
     submit: async () => ({

@@ -53,11 +53,16 @@ export async function accessToken(
       },
     );
   }
-  const token = (response.body as { access_token?: unknown } | null)?.access_token;
+  const token = (response.body as { access_token?: unknown } | null)
+    ?.access_token;
   if (typeof token !== 'string' || token.length === 0) {
-    throw fault('GOOGLE.AUTH_FAILED', 'The Google token response is missing an access_token.', {
-      retryable: true,
-    });
+    throw fault(
+      'GOOGLE.AUTH_FAILED',
+      'The Google token response is missing an access_token.',
+      {
+        retryable: true,
+      },
+    );
   }
   return token;
 }
@@ -66,7 +71,8 @@ export function purchaseUrl(
   config: GoogleConfig,
   call: { productId: string; token: string },
 ): string {
-  const base = 'https://androidpublisher.googleapis.com/androidpublisher/v3/applications';
+  const base =
+    'https://androidpublisher.googleapis.com/androidpublisher/v3/applications';
   return `${base}/${encodeURIComponent(config.packageName)}/purchases/products/${encodeURIComponent(
     call.productId,
   )}/tokens/${encodeURIComponent(call.token)}`;

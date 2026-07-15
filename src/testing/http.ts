@@ -26,7 +26,10 @@ export interface RecordedRequest {
   readonly body: string;
 }
 
-export function fakeFetch(routes: Route[]): { doFetch: FetchLike; requests: RecordedRequest[] } {
+export function fakeFetch(routes: Route[]): {
+  doFetch: FetchLike;
+  requests: RecordedRequest[];
+} {
   const requests: RecordedRequest[] = [];
   const doFetch: FetchLike = async (url, init) => {
     requests.push({
@@ -35,7 +38,9 @@ export function fakeFetch(routes: Route[]): { doFetch: FetchLike; requests: Reco
       headers: { ...(init?.headers ?? {}) },
       body: init?.body ?? '',
     });
-    const route = routes.find((candidate) => candidate.when(url, init?.method ?? 'GET'));
+    const route = routes.find((candidate) =>
+      candidate.when(url, init?.method ?? 'GET'),
+    );
     if (route === undefined) {
       return routeResponse({ when: () => true, status: 404, body: '' });
     }

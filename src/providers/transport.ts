@@ -37,7 +37,10 @@ export async function requestBytes(
 ): Promise<BytesResponse> {
   const response = await send(doFetch, spec);
   if (response.arrayBuffer === undefined) {
-    throw fault('TRANSPORT.BINARY_UNSUPPORTED', 'The fetch in use cannot return binary bodies.');
+    throw fault(
+      'TRANSPORT.BINARY_UNSUPPORTED',
+      'The fetch in use cannot return binary bodies.',
+    );
   }
   try {
     return {
@@ -46,11 +49,15 @@ export async function requestBytes(
       bytes: new Uint8Array(await response.arrayBuffer()),
     };
   } catch (error) {
-    throw fault('TRANSPORT.RESPONSE_UNREADABLE', 'The provider response body could not be read.', {
-      retryable: true,
-      cause: error,
-      detail: { method: spec.method, url: spec.url },
-    });
+    throw fault(
+      'TRANSPORT.RESPONSE_UNREADABLE',
+      'The provider response body could not be read.',
+      {
+        retryable: true,
+        cause: error,
+        detail: { method: spec.method, url: spec.url },
+      },
+    );
   }
 }
 
@@ -66,7 +73,12 @@ export async function requestJson(
 ): Promise<HttpResponse> {
   const response = await send(doFetch, spec);
   const text = await readBody(response, spec);
-  return { ok: response.ok, status: response.status, body: parseJson(text), text };
+  return {
+    ok: response.ok,
+    status: response.status,
+    body: parseJson(text),
+    text,
+  };
 }
 
 async function send(
@@ -88,22 +100,33 @@ async function send(
     });
   } catch (error) {
     if (isAbort(error)) {
-      throw fault('TRANSPORT.TIMED_OUT', `The ${spec.method} request to the provider timed out.`, {
+      throw fault(
+        'TRANSPORT.TIMED_OUT',
+        `The ${spec.method} request to the provider timed out.`,
+        {
+          retryable: true,
+          cause: error,
+          detail: { method: spec.method, url: spec.url },
+        },
+      );
+    }
+    throw fault(
+      'TRANSPORT.REQUEST_FAILED',
+      `The ${spec.method} request to the provider failed.`,
+      {
         retryable: true,
         cause: error,
         detail: { method: spec.method, url: spec.url },
-      });
-    }
-    throw fault('TRANSPORT.REQUEST_FAILED', `The ${spec.method} request to the provider failed.`, {
-      retryable: true,
-      cause: error,
-      detail: { method: spec.method, url: spec.url },
-    });
+      },
+    );
   }
 }
 
 function isAbort(error: unknown): boolean {
-  return error instanceof Error && (error.name === 'TimeoutError' || error.name === 'AbortError');
+  return (
+    error instanceof Error &&
+    (error.name === 'TimeoutError' || error.name === 'AbortError')
+  );
 }
 
 async function readBody(
@@ -113,11 +136,15 @@ async function readBody(
   try {
     return await response.text();
   } catch (error) {
-    throw fault('TRANSPORT.RESPONSE_UNREADABLE', 'The provider response body could not be read.', {
-      retryable: true,
-      cause: error,
-      detail: { method: spec.method, url: spec.url },
-    });
+    throw fault(
+      'TRANSPORT.RESPONSE_UNREADABLE',
+      'The provider response body could not be read.',
+      {
+        retryable: true,
+        cause: error,
+        detail: { method: spec.method, url: spec.url },
+      },
+    );
   }
 }
 

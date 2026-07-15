@@ -15,13 +15,18 @@ import type { CanonicalEvent } from '../../../canonical/index.ts';
 import type { RawWebhook } from '../../../ports/index.ts';
 import type { MetaConfig } from './config.ts';
 
-const EVENT_TYPE_BY_NOTIFICATION: Readonly<Record<string, 'PURCHASE' | 'REFUND' | 'CHARGEBACK'>> = {
+const EVENT_TYPE_BY_NOTIFICATION: Readonly<
+  Record<string, 'PURCHASE' | 'REFUND' | 'CHARGEBACK'>
+> = {
   PURCHASED: 'PURCHASE',
   REFUNDED: 'REFUND',
   CHARGEBACKED: 'CHARGEBACK',
 };
 
-export function parseWebhook(config: MetaConfig, webhook: RawWebhook): CanonicalEvent[] {
+export function parseWebhook(
+  config: MetaConfig,
+  webhook: RawWebhook,
+): CanonicalEvent[] {
   const changes = changesOf(webhook.body);
   if (changes === null) {
     return [unrecognizedEvent('meta', webhook)];
@@ -54,7 +59,11 @@ function eventOf(config: MetaConfig, change: unknown): CanonicalEvent {
   const record = change as {
     field?: unknown;
     value?: {
-      product_info?: { notification_type?: unknown; reporting_id?: unknown; sku?: unknown };
+      product_info?: {
+        notification_type?: unknown;
+        reporting_id?: unknown;
+        sku?: unknown;
+      };
     };
   } | null;
   const info = record?.value?.product_info;

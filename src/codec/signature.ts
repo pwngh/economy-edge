@@ -9,7 +9,12 @@
  * @license MIT
  */
 
-import { bytesOfBase64Url, decodeBase64, decodeJwsHeader, decodeJwsPayload } from './jwt.ts';
+import {
+  bytesOfBase64Url,
+  decodeBase64,
+  decodeJwsHeader,
+  decodeJwsPayload,
+} from './jwt.ts';
 import { ecdsaDerToRaw, parseCertificate } from './x509.ts';
 
 import type { ParsedCertificate } from './x509.ts';
@@ -73,7 +78,12 @@ async function verifyHmac(
     false,
     ['verify'],
   );
-  return crypto.subtle.verify('HMAC', key, signatureBytes, new TextEncoder().encode(webhook.body));
+  return crypto.subtle.verify(
+    'HMAC',
+    key,
+    signatureBytes,
+    new TextEncoder().encode(webhook.body),
+  );
 }
 
 const CLOCK_SKEW_MS = 300_000;
@@ -88,7 +98,10 @@ async function verifyOidcJwt(
   }
   const jwt = authorization.slice('Bearer '.length);
   const segments = jwt.split('.');
-  const header = decodeJwsHeader(jwt) as { alg?: unknown; kid?: unknown } | null;
+  const header = decodeJwsHeader(jwt) as {
+    alg?: unknown;
+    kid?: unknown;
+  } | null;
   if (segments.length !== 3 || header === null || header.alg !== 'RS256') {
     return false;
   }
@@ -97,7 +110,8 @@ async function verifyOidcJwt(
     return false;
   }
   const candidates = scheme.keys.filter(
-    (key) => key.kty === 'RSA' && (header.kid === undefined || key.kid === header.kid),
+    (key) =>
+      key.kty === 'RSA' && (header.kid === undefined || key.kid === header.kid),
   );
   const data = new TextEncoder().encode(`${segments[0]}.${segments[1]}`);
   if (!(await anyKeySigns(candidates, signature, data))) {
@@ -122,14 +136,20 @@ function withinTokenLifetime(
   claims: { exp?: unknown; nbf?: unknown; iat?: unknown },
   at: number,
 ): boolean {
-  if (typeof claims.exp !== 'number' || claims.exp * 1000 + CLOCK_SKEW_MS <= at) {
+  if (
+    typeof claims.exp !== 'number' ||
+    claims.exp * 1000 + CLOCK_SKEW_MS <= at
+  ) {
     return false;
   }
   for (const notBeforeLike of [claims.nbf, claims.iat]) {
     if (notBeforeLike === undefined) {
       continue;
     }
-    if (typeof notBeforeLike !== 'number' || notBeforeLike * 1000 - CLOCK_SKEW_MS > at) {
+    if (
+      typeof notBeforeLike !== 'number' ||
+      notBeforeLike * 1000 - CLOCK_SKEW_MS > at
+    ) {
       return false;
     }
   }
@@ -150,7 +170,9 @@ async function anyKeySigns(
         false,
         ['verify'],
       );
-      if (await crypto.subtle.verify('RSASSA-PKCS1-v1_5', key, signature, data)) {
+      if (
+        await crypto.subtle.verify('RSASSA-PKCS1-v1_5', key, signature, data)
+      ) {
         return true;
       }
     } catch {
@@ -171,8 +193,16 @@ async function verifyJwsX5c(
   if (jws === null) {
     return false;
   }
-  const header = decodeJwsHeader(jws) as { alg?: unknown; x5c?: unknown } | null;
-  const hash = header?.alg === 'ES256' ? 'SHA-256' : header?.alg === 'ES384' ? 'SHA-384' : null;
+  const header = decodeJwsHeader(jws) as {
+    alg?: unknown;
+    x5c?: unknown;
+  } | null;
+  const hash =
+    header?.alg === 'ES256'
+      ? 'SHA-256'
+      : header?.alg === 'ES384'
+        ? 'SHA-384'
+        : null;
   if (hash === null || !Array.isArray(header?.x5c) || header.x5c.length === 0) {
     return false;
   }
@@ -197,7 +227,10 @@ function chainOf(x5c: unknown[]): ParsedCertificate[] | null {
   }
   const chain: ParsedCertificate[] = [];
   for (const entry of x5c) {
-    if (typeof entry !== 'string' || entry.length > MAX_CERTIFICATE_BASE64_LENGTH) {
+    if (
+      typeof entry !== 'string' ||
+      entry.length > MAX_CERTIFICATE_BASE64_LENGTH
+    ) {
       return null;
     }
     const der = decodeBase64(entry);
@@ -210,8 +243,13 @@ function chainOf(x5c: unknown[]): ParsedCertificate[] | null {
   return chain;
 }
 
-function everyCertificateWithinValidity(chain: readonly ParsedCertificate[], at: number): boolean {
-  return chain.every((certificate) => at >= certificate.notBefore && at <= certificate.notAfter);
+function everyCertificateWithinValidity(
+  chain: readonly ParsedCertificate[],
+  at: number,
+): boolean {
+  return chain.every(
+    (certificate) => at >= certificate.notBefore && at <= certificate.notAfter,
+  );
 }
 
 async function leafSignsJws(
@@ -242,10 +280,17 @@ async function certificateSignedBy(
   if (raw === null || key === null) {
     return false;
   }
-  return crypto.subtle.verify({ name: 'ECDSA', hash: child.signatureHash }, key, raw, child.tbs);
+  return crypto.subtle.verify(
+    { name: 'ECDSA', hash: child.signatureHash },
+    key,
+    raw,
+    child.tbs,
+  );
 }
 
-async function importCertificateKey(certificate: ParsedCertificate): Promise<CryptoKey | null> {
+async function importCertificateKey(
+  certificate: ParsedCertificate,
+): Promise<CryptoKey | null> {
   try {
     return await crypto.subtle.importKey(
       'spki',
@@ -259,9 +304,14 @@ async function importCertificateKey(certificate: ParsedCertificate): Promise<Cry
   }
 }
 
-function pinnedRootMatches(roots: readonly string[], candidate: ParsedCertificate): boolean {
+function pinnedRootMatches(
+  roots: readonly string[],
+  candidate: ParsedCertificate,
+): boolean {
   for (const root of roots) {
-    const der = decodeBase64(root.replace(/-----[^-]+-----/g, '').replace(/\s+/g, ''));
+    const der = decodeBase64(
+      root.replace(/-----[^-]+-----/g, '').replace(/\s+/g, ''),
+    );
     if (der !== null && bytesEqual(der, candidate.der)) {
       return true;
     }
@@ -293,7 +343,10 @@ function embeddedJws(body: string): string | null {
   return body.split('.').length === 3 ? body : null;
 }
 
-function headerValue(headers: Readonly<Record<string, string>>, name: string): string | null {
+function headerValue(
+  headers: Readonly<Record<string, string>>,
+  name: string,
+): string | null {
   const wanted = name.toLowerCase();
   for (const [header, value] of Object.entries(headers)) {
     if (header.toLowerCase() === wanted) {

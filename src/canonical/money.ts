@@ -121,13 +121,21 @@ function inRange(run: () => bigint, currency: string): bigint {
 
 function requireCurrency(currency: string): void {
   if (!/^[A-Z]{3,10}$/.test(currency)) {
-    throw fault('MONEY.INVALID_CURRENCY', `The currency '${currency}' must be an uppercase code.`, {
-      detail: { currency },
-    });
+    throw fault(
+      'MONEY.INVALID_CURRENCY',
+      `The currency '${currency}' must be an uppercase code.`,
+      {
+        detail: { currency },
+      },
+    );
   }
 }
 
-function requireSameCurrency(left: Money, right: Money, operation: string): void {
+function requireSameCurrency(
+  left: Money,
+  right: Money,
+  operation: string,
+): void {
   if (left.currency !== right.currency) {
     throw fault(
       'MONEY.CROSS_CURRENCY',

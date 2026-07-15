@@ -13,7 +13,12 @@ import { moneyFromDecimal } from '#src/canonical/money.ts';
 
 import type { Money } from '#src/canonical/index.ts';
 
-export { fakeInbound, fakeOutbound, samplePurchase, sampleSettlement } from '#src/testing/index.ts';
+export {
+  fakeInbound,
+  fakeOutbound,
+  samplePurchase,
+  sampleSettlement,
+} from '#src/testing/index.ts';
 
 export function usd(decimal: string): Money {
   return moneyFromDecimal(decimal, 'USD');

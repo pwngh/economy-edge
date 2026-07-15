@@ -32,5 +32,8 @@ export function google(config: GoogleConfig): InboundProvider {
   if (config.financialReportsBucket === undefined) {
     return provider;
   }
-  return { ...provider, report: (window) => earningsReport(config, doFetch, window) };
+  return {
+    ...provider,
+    report: (window) => earningsReport(config, doFetch, window),
+  };
 }

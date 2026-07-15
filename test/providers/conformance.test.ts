@@ -25,9 +25,16 @@ import type { ProviderId } from '#src/canonical/index.ts';
 import type { FetchLike } from '#src/providers/fetch.ts';
 import type { InboundProvider, OutboundProvider } from '#src/ports/index.ts';
 
-const offline: FetchLike = async () => ({ ok: false, status: 404, text: async () => '' });
+const offline: FetchLike = async () => ({
+  ok: false,
+  status: 404,
+  text: async () => '',
+});
 
-const catalogEntry = () => ({ amount: usd('1.00'), productType: 'CONSUMABLE' as const });
+const catalogEntry = () => ({
+  amount: usd('1.00'),
+  productType: 'CONSUMABLE' as const,
+});
 
 const rsaPrivateKey = generateKeyPairSync('rsa', {
   modulusLength: 2048,
@@ -52,14 +59,24 @@ const INBOUND: InboundCase[] = [
   {
     id: 'steam',
     build: (doFetch) =>
-      steam({ publisherWebApiKey: 'key', appId: 1, environment: 'sandbox', fetch: doFetch }),
+      steam({
+        publisherWebApiKey: 'key',
+        appId: 1,
+        environment: 'sandbox',
+        fetch: doFetch,
+      }),
     validProof: { orderId: '123' },
     malformedProofCode: 'STEAM.MALFORMED_PROOF',
   },
   {
     id: 'meta',
     build: (doFetch) =>
-      meta({ appId: 'app', appSecret: 'secret', resolveSku: catalogEntry, fetch: doFetch }),
+      meta({
+        appId: 'app',
+        appSecret: 'secret',
+        resolveSku: catalogEntry,
+        fetch: doFetch,
+      }),
     validProof: { userId: 'usr-1', sku: 'sku-1' },
     malformedProofCode: 'META.MALFORMED_PROOF',
   },
@@ -86,7 +103,12 @@ const INBOUND: InboundCase[] = [
         issuerId: 'issuer',
         keyId: 'key',
         privateKey: ecPrivateKey,
-        reports: { issuerId: 'issuer', keyId: 'key', privateKey: ecPrivateKey, vendorNumber: '1' },
+        reports: {
+          issuerId: 'issuer',
+          keyId: 'key',
+          privateKey: ecPrivateKey,
+          vendorNumber: '1',
+        },
         fetch: doFetch,
       }),
     validProof: { transactionId: '2000000123456789' },
@@ -147,30 +169,49 @@ const GARBAGE_BODIES = [
   '{"message":{"data":"!!!not-base64!!!"}}',
 ];
 
-const HOSTILE_FETCHES: Array<{ readonly label: string; readonly doFetch: FetchLike }> = [
+const HOSTILE_FETCHES: Array<{
+  readonly label: string;
+  readonly doFetch: FetchLike;
+}> = [
   {
     label: 'a connection that dies',
     doFetch: async () => {
       throw new Error('socket hang up');
     },
   },
-  { label: 'an HTTP 500 with a non-JSON body', doFetch: respondingWith(500, '<html>oops</html>') },
-  { label: 'an HTTP 200 with truncated JSON', doFetch: respondingWith(200, '{"broken":') },
-  { label: 'an HTTP 200 with an alien shape', doFetch: respondingWith(200, '{"weird":[7]}') },
+  {
+    label: 'an HTTP 500 with a non-JSON body',
+    doFetch: respondingWith(500, '<html>oops</html>'),
+  },
+  {
+    label: 'an HTTP 200 with truncated JSON',
+    doFetch: respondingWith(200, '{"broken":'),
+  },
+  {
+    label: 'an HTTP 200 with an alien shape',
+    doFetch: respondingWith(200, '{"weird":[7]}'),
+  },
 ];
 
-const NARROW_WINDOW = { from: '2026-07-01T00:00:00Z', to: '2026-07-02T00:00:00Z' };
+const NARROW_WINDOW = {
+  from: '2026-07-01T00:00:00Z',
+  to: '2026-07-02T00:00:00Z',
+};
 
 function respondingWith(status: number, body: string): FetchLike {
   return async () => ({
     ok: status >= 200 && status < 300,
     status,
     text: async () => body,
-    arrayBuffer: async () => new TextEncoder().encode(body).buffer as ArrayBuffer,
+    arrayBuffer: async () =>
+      new TextEncoder().encode(body).buffer as ArrayBuffer,
   });
 }
 
-async function assertCodedFaultOrValue(call: () => Promise<unknown>, context: string) {
+async function assertCodedFaultOrValue(
+  call: () => Promise<unknown>,
+  context: string,
+) {
   try {
     await call();
   } catch (error) {
@@ -194,7 +235,8 @@ describe('provider conformance', () => {
         for (const proof of [{}, null, 'text', 42]) {
           await assert.rejects(
             adapter.verify({ provider: id, proof }),
-            (error: unknown) => (error as { code?: unknown }).code === malformedProofCode,
+            (error: unknown) =>
+              (error as { code?: unknown }).code === malformedProofCode,
             `proof ${JSON.stringify(proof)} must be refused`,
           );
         }
@@ -205,7 +247,8 @@ describe('provider conformance', () => {
           for (const proof of [{}, null, 'text', 42]) {
             await assert.rejects(
               adapter.fulfill!({ provider: id, proof }),
-              (error: unknown) => (error as { code?: unknown }).code === malformedProofCode,
+              (error: unknown) =>
+                (error as { code?: unknown }).code === malformedProofCode,
               `proof ${JSON.stringify(proof)} must be refused`,
             );
           }
@@ -217,8 +260,14 @@ describe('provider conformance', () => {
           for (const body of GARBAGE_BODIES) {
             const events = adapter.parse!({ provider: id, headers: {}, body });
 
-            assert.ok(Array.isArray(events), `body ${JSON.stringify(body)} must yield an array`);
-            assert.ok(events.length >= 1, `body ${JSON.stringify(body)} must never be dropped`);
+            assert.ok(
+              Array.isArray(events),
+              `body ${JSON.stringify(body)} must yield an array`,
+            );
+            assert.ok(
+              events.length >= 1,
+              `body ${JSON.stringify(body)} must never be dropped`,
+            );
             for (const event of events) {
               assert.equal(event.schemaVersion, 1);
               assert.equal(event.provider, id);
@@ -234,17 +283,29 @@ describe('provider conformance', () => {
         for (const { label, doFetch } of HOSTILE_FETCHES) {
           const hostile = build(doFetch);
           const calls: Array<[string, () => Promise<unknown>]> = [
-            ['verify', () => hostile.verify({ provider: id, proof: validProof })],
-            ['status', () => hostile.status({ provider: id, providerTxnId: '1' })],
+            [
+              'verify',
+              () => hostile.verify({ provider: id, proof: validProof }),
+            ],
+            [
+              'status',
+              () => hostile.status({ provider: id, providerTxnId: '1' }),
+            ],
           ];
           if (hostile.fulfill !== undefined) {
-            calls.push(['fulfill', () => hostile.fulfill!({ provider: id, proof: validProof })]);
+            calls.push([
+              'fulfill',
+              () => hostile.fulfill!({ provider: id, proof: validProof }),
+            ]);
           }
           if (hostile.report !== undefined) {
             calls.push(['report', () => hostile.report!(NARROW_WINDOW)]);
           }
           for (const [verb, call] of calls) {
-            await assertCodedFaultOrValue(call, `${id}.${verb} against ${label}`);
+            await assertCodedFaultOrValue(
+              call,
+              `${id}.${verb} against ${label}`,
+            );
           }
         }
       });
@@ -262,7 +323,8 @@ describe('provider conformance', () => {
         for (const key of ['', '   ']) {
           await assert.rejects(
             adapter.submit({ key, payee: 'usr-1', amount: usd('1.00') }),
-            (error: unknown) => (error as { code?: unknown }).code === 'CODEC.KEY_REQUIRED',
+            (error: unknown) =>
+              (error as { code?: unknown }).code === 'CODEC.KEY_REQUIRED',
           );
         }
       });
@@ -272,7 +334,10 @@ describe('provider conformance', () => {
           const events = adapter.parse({ provider: id, headers: {}, body });
 
           assert.ok(Array.isArray(events));
-          assert.ok(events.length >= 1, `body ${JSON.stringify(body)} must never be dropped`);
+          assert.ok(
+            events.length >= 1,
+            `body ${JSON.stringify(body)} must never be dropped`,
+          );
           for (const event of events) {
             assert.equal(event.schemaVersion, 1);
             assert.equal(event.provider, id);
@@ -288,7 +353,15 @@ describe('provider conformance', () => {
         for (const { label, doFetch } of HOSTILE_FETCHES) {
           const hostile = build(doFetch);
           const calls: Array<[string, () => Promise<unknown>]> = [
-            ['submit', () => hostile.submit({ key: 'key-1', payee: 'usr-1', amount: usd('1.00') })],
+            [
+              'submit',
+              () =>
+                hostile.submit({
+                  key: 'key-1',
+                  payee: 'usr-1',
+                  amount: usd('1.00'),
+                }),
+            ],
             ['status', () => hostile.status({ ref })],
             ['report', () => hostile.report(NARROW_WINDOW)],
           ];
@@ -296,10 +369,16 @@ describe('provider conformance', () => {
             calls.push(['cancel', () => hostile.cancel!(ref)]);
           }
           if (hostile.payee !== undefined) {
-            calls.push(['payee.status', () => hostile.payee!.status({ userId: 'usr-1' })]);
+            calls.push([
+              'payee.status',
+              () => hostile.payee!.status({ userId: 'usr-1' }),
+            ]);
           }
           for (const [verb, call] of calls) {
-            await assertCodedFaultOrValue(call, `${id}.${verb} against ${label}`);
+            await assertCodedFaultOrValue(
+              call,
+              `${id}.${verb} against ${label}`,
+            );
           }
         }
       });

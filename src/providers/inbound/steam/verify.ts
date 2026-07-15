@@ -47,7 +47,10 @@ export async function verifyPurchase(
       path: 'FinalizeTxn/v2',
       params: { orderid: orderId },
     });
-    if (finalize.result === 'failure' && finalize.errorcode !== ALREADY_COMMITTED) {
+    if (
+      finalize.result === 'failure' &&
+      finalize.errorcode !== ALREADY_COMMITTED
+    ) {
       return reject('REJECTED');
     }
     query = await steamGet(config, doFetch, {
@@ -109,9 +112,13 @@ export function totalOf(items: unknown[]): bigint {
     } else if (typeof amount === 'string' && /^\d+$/.test(amount)) {
       total += BigInt(amount);
     } else {
-      throw fault('STEAM.MALFORMED_RESPONSE', 'A Steam item amount is not an integer.', {
-        detail: { amount },
-      });
+      throw fault(
+        'STEAM.MALFORMED_RESPONSE',
+        'A Steam item amount is not an integer.',
+        {
+          detail: { amount },
+        },
+      );
     }
   }
   return total;
@@ -124,9 +131,13 @@ export function idOf(value: unknown): string {
   if (typeof value === 'number' && Number.isSafeInteger(value)) {
     return String(value);
   }
-  throw fault('STEAM.MALFORMED_RESPONSE', 'A Steam id is missing or unsafe to read.', {
-    detail: { value },
-  });
+  throw fault(
+    'STEAM.MALFORMED_RESPONSE',
+    'A Steam id is missing or unsafe to read.',
+    {
+      detail: { value },
+    },
+  );
 }
 
 function orderIdOf(proof: unknown): string {
@@ -136,13 +147,23 @@ function orderIdOf(proof: unknown): string {
       return orderId;
     }
   }
-  throw fault('STEAM.MALFORMED_PROOF', 'A Steam proof must carry orderId as a decimal string.', {
-    detail: { proof },
-  });
+  throw fault(
+    'STEAM.MALFORMED_PROOF',
+    'A Steam proof must carry orderId as a decimal string.',
+    {
+      detail: { proof },
+    },
+  );
 }
 
-function retryableReject(error: unknown): { readonly ok: false; readonly reason: RejectReason } {
-  if (error instanceof Error && (error as { retryable?: unknown }).retryable === true) {
+function retryableReject(error: unknown): {
+  readonly ok: false;
+  readonly reason: RejectReason;
+} {
+  if (
+    error instanceof Error &&
+    (error as { retryable?: unknown }).retryable === true
+  ) {
     return reject('RETRYABLE');
   }
   throw error;

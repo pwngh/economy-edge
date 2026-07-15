@@ -22,8 +22,11 @@ interface TiliaHosts {
   readonly wallets: string;
 }
 
-export function tiliaHosts(environment: TiliaConfig['environment']): TiliaHosts {
-  const domain = environment === 'production' ? 'tilia-inc.com' : 'staging.tilia-inc.com';
+export function tiliaHosts(
+  environment: TiliaConfig['environment'],
+): TiliaHosts {
+  const domain =
+    environment === 'production' ? 'tilia-inc.com' : 'staging.tilia-inc.com';
   return {
     auth: `https://auth.${domain}`,
     invoicing: `https://invoicing.${domain}`,
@@ -32,7 +35,10 @@ export function tiliaHosts(environment: TiliaConfig['environment']): TiliaHosts 
   };
 }
 
-export async function bearerToken(config: TiliaConfig, doFetch: FetchLike): Promise<string> {
+export async function bearerToken(
+  config: TiliaConfig,
+  doFetch: FetchLike,
+): Promise<string> {
   const response = await requestJson(doFetch, {
     method: 'POST',
     url: `${tiliaHosts(config.environment).auth}/token`,
@@ -55,9 +61,13 @@ export async function bearerToken(config: TiliaConfig, doFetch: FetchLike): Prom
   }
   const token = fieldOf(response.body, 'access_token');
   if (token === null) {
-    throw fault('TILIA.AUTH_FAILED', 'The Tilia token response is missing an access_token.', {
-      retryable: true,
-    });
+    throw fault(
+      'TILIA.AUTH_FAILED',
+      'The Tilia token response is missing an access_token.',
+      {
+        retryable: true,
+      },
+    );
   }
   return token;
 }
@@ -79,6 +89,9 @@ export function fieldOf(value: unknown, name: string): string | null {
 
 function formEncode(fields: Record<string, string>): string {
   return Object.entries(fields)
-    .map(([name, value]) => `${encodeURIComponent(name)}=${encodeURIComponent(value)}`)
+    .map(
+      ([name, value]) =>
+        `${encodeURIComponent(name)}=${encodeURIComponent(value)}`,
+    )
     .join('&');
 }

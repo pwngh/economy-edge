@@ -45,7 +45,9 @@ export function hasFixtures(provider: ProviderId): boolean {
 
 function fixturePath(provider: ProviderId, name: string): string {
   const captured = join(FIXTURES_ROOT, provider, 'captured', name);
-  return existsSync(captured) ? captured : join(FIXTURES_ROOT, provider, 'expected', name);
+  return existsSync(captured)
+    ? captured
+    : join(FIXTURES_ROOT, provider, 'expected', name);
 }
 
 function tierNames(provider: ProviderId, tier: Tier): string[] {

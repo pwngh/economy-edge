@@ -13,7 +13,10 @@ const QUOTE = 34;
 const NEWLINE = 10;
 const CARRIAGE_RETURN = 13;
 
-export function parseDelimited(text: string, delimiter: ',' | '\t'): string[][] {
+export function parseDelimited(
+  text: string,
+  delimiter: ',' | '\t',
+): string[][] {
   const delimiterCode = delimiter.charCodeAt(0);
   const rows: string[][] = [];
   let row: string[] = [];
@@ -39,7 +42,10 @@ export function parseDelimited(text: string, delimiter: ',' | '\t'): string[][] 
       row = [];
       field = '';
       segmentStart = index + 1;
-    } else if (code === CARRIAGE_RETURN && text.charCodeAt(index + 1) === NEWLINE) {
+    } else if (
+      code === CARRIAGE_RETURN &&
+      text.charCodeAt(index + 1) === NEWLINE
+    ) {
       field += text.slice(segmentStart, index);
       segmentStart = index + 1;
     }
@@ -52,7 +58,10 @@ export function parseDelimited(text: string, delimiter: ',' | '\t'): string[][] 
   return rows.filter((columns) => columns.some((value) => value.length > 0));
 }
 
-function scanQuoted(text: string, start: number): { value: string; next: number } {
+function scanQuoted(
+  text: string,
+  start: number,
+): { value: string; next: number } {
   let value = '';
   let cursor = start;
   for (;;) {
@@ -70,7 +79,12 @@ function scanQuoted(text: string, start: number): { value: string; next: number 
   }
 }
 
-export function columnIndex(header: readonly string[], name: string): number | null {
-  const index = header.findIndex((column) => column.trim().toLowerCase() === name.toLowerCase());
+export function columnIndex(
+  header: readonly string[],
+  name: string,
+): number | null {
+  const index = header.findIndex(
+    (column) => column.trim().toLowerCase() === name.toLowerCase(),
+  );
   return index === -1 ? null : index;
 }

@@ -13,7 +13,11 @@ import { fault } from '../../../canonical/fault.ts';
 import { ok, reject } from '../../../canonical/outcome.ts';
 import { requestJson } from '../../transport.ts';
 
-import type { CanonicalPurchase, Outcome, RejectReason } from '../../../canonical/index.ts';
+import type {
+  CanonicalPurchase,
+  Outcome,
+  RejectReason,
+} from '../../../canonical/index.ts';
 import type { FetchLike } from '../../fetch.ts';
 import type { RawProof } from '../../../ports/index.ts';
 import type { MetaConfig } from './config.ts';
@@ -86,7 +90,8 @@ export async function fulfillPurchase(
   if (!response.ok && (response.status === 429 || response.status >= 500)) {
     return reject('RETRYABLE');
   }
-  const consumed = (response.body as { success?: unknown } | null)?.success === true;
+  const consumed =
+    (response.body as { success?: unknown } | null)?.success === true;
   return consumed ? ok(undefined) : reject('REJECTED');
 }
 
@@ -111,10 +116,14 @@ async function verifyEntitlement(
   });
   if (!response.ok) {
     if (response.status === 429 || response.status >= 500) {
-      throw fault('META.VERIFY_FAILED', `Meta returned a ${response.status} status.`, {
-        retryable: true,
-        detail: { status: response.status },
-      });
+      throw fault(
+        'META.VERIFY_FAILED',
+        `Meta returned a ${response.status} status.`,
+        {
+          retryable: true,
+          detail: { status: response.status },
+        },
+      );
     }
     return false;
   }
@@ -137,10 +146,14 @@ async function findPurchase(
     url: `${GRAPH_HOST}/${config.appId}/viewer_purchases?${query}`,
   });
   if (!response.ok) {
-    throw fault('META.PURCHASES_FAILED', `Meta returned a ${response.status} status.`, {
-      retryable: response.status === 429 || response.status >= 500,
-      detail: { status: response.status },
-    });
+    throw fault(
+      'META.PURCHASES_FAILED',
+      `Meta returned a ${response.status} status.`,
+      {
+        retryable: response.status === 429 || response.status >= 500,
+        detail: { status: response.status },
+      },
+    );
   }
   const rows = (response.body as { data?: unknown } | null)?.data;
   if (!Array.isArray(rows)) {
@@ -170,13 +183,23 @@ function narrowProof(proof: unknown): MetaProof {
       return { userId: record.userId, sku: record.sku };
     }
   }
-  throw fault('META.MALFORMED_PROOF', 'A Meta proof must carry userId and sku.', {
-    detail: { proof },
-  });
+  throw fault(
+    'META.MALFORMED_PROOF',
+    'A Meta proof must carry userId and sku.',
+    {
+      detail: { proof },
+    },
+  );
 }
 
-function retryableReject(error: unknown): { readonly ok: false; readonly reason: RejectReason } {
-  if (error instanceof Error && (error as { retryable?: unknown }).retryable === true) {
+function retryableReject(error: unknown): {
+  readonly ok: false;
+  readonly reason: RejectReason;
+} {
+  if (
+    error instanceof Error &&
+    (error as { retryable?: unknown }).retryable === true
+  ) {
     return reject('RETRYABLE');
   }
   throw error;
@@ -184,6 +207,9 @@ function retryableReject(error: unknown): { readonly ok: false; readonly reason:
 
 function formEncode(fields: Record<string, string>): string {
   return Object.entries(fields)
-    .map(([name, value]) => `${encodeURIComponent(name)}=${encodeURIComponent(value)}`)
+    .map(
+      ([name, value]) =>
+        `${encodeURIComponent(name)}=${encodeURIComponent(value)}`,
+    )
     .join('&');
 }

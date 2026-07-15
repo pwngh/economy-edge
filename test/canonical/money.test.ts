@@ -28,7 +28,10 @@ describe('Money', () => {
     const cases = ['0.00', '12.34', '0.05', '1000000.99'];
 
     for (const decimal of cases) {
-      assert.equal(encodeMoney(moneyFromDecimal(decimal, 'USD')), `USD:${decimal}`);
+      assert.equal(
+        encodeMoney(moneyFromDecimal(decimal, 'USD')),
+        `USD:${decimal}`,
+      );
     }
   });
 
@@ -74,11 +77,17 @@ describe('Money', () => {
   });
 
   test('adds two same-currency amounts in minor units', () => {
-    assert.deepEqual(add(money('USD', 150n), money('USD', 225n)), money('USD', 375n));
+    assert.deepEqual(
+      add(money('USD', 150n), money('USD', 225n)),
+      money('USD', 375n),
+    );
   });
 
   test('subtracts in minor units', () => {
-    assert.deepEqual(subtract(money('USD', 500n), money('USD', 49n)), money('USD', 451n));
+    assert.deepEqual(
+      subtract(money('USD', 500n), money('USD', 49n)),
+      money('USD', 451n),
+    );
   });
 
   test('gives zero-exponent currencies no invented decimals', () => {
@@ -99,7 +108,10 @@ describe('Money', () => {
 
   test('defaults unknown currency codes to two minor digits', () => {
     assert.equal(currencyExponent('CREDIT'), 2);
-    assert.deepEqual(moneyFromDecimal('12.34', 'CREDIT'), money('CREDIT', 1234n));
+    assert.deepEqual(
+      moneyFromDecimal('12.34', 'CREDIT'),
+      money('CREDIT', 1234n),
+    );
   });
 
   test('names each currency exponent', () => {
@@ -117,7 +129,10 @@ describe('Money', () => {
   });
 
   test('holds every amount inside a signed 64-bit minor-unit count', () => {
-    assert.equal(moneyFromDecimal('92233720368547758.07', 'USD').minor, 9223372036854775807n);
+    assert.equal(
+      moneyFromDecimal('92233720368547758.07', 'USD').minor,
+      9223372036854775807n,
+    );
     assert.throws(
       () => money('USD', 9223372036854775808n),
       (error: unknown) => hasCode(error, 'MONEY.OVERFLOW'),

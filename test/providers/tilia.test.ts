@@ -38,7 +38,10 @@ interface Recorded {
   readonly body: string;
 }
 
-function fakeTilia(routes: Route[]): { doFetch: FetchLike; requests: Recorded[] } {
+function fakeTilia(routes: Route[]): {
+  doFetch: FetchLike;
+  requests: Recorded[];
+} {
   const requests: Recorded[] = [];
   const doFetch: FetchLike = async (url, init) => {
     requests.push({
@@ -48,7 +51,11 @@ function fakeTilia(routes: Route[]): { doFetch: FetchLike; requests: Recorded[] 
       body: init?.body ?? '',
     });
     if (url.endsWith('/token')) {
-      return { ok: true, status: 200, text: async () => fixture('tilia', 'token.json') };
+      return {
+        ok: true,
+        status: 200,
+        text: async () => fixture('tilia', 'token.json'),
+      };
     }
     for (const route of routes) {
       if (route.when(url, init?.method ?? 'GET')) {
@@ -56,7 +63,11 @@ function fakeTilia(routes: Route[]): { doFetch: FetchLike; requests: Recorded[] 
           throw new Error('socket hang up');
         }
         const status = route.status ?? 200;
-        return { ok: status >= 200 && status < 300, status, text: async () => route.body ?? '' };
+        return {
+          ok: status >= 200 && status < 300,
+          status,
+          text: async () => route.body ?? '',
+        };
       }
     }
     return { ok: false, status: 404, text: async () => '' };
@@ -109,7 +120,11 @@ describe('tilia submit', () => {
     const submit = requests.find(
       (request) => request.method === 'POST' && request.url.includes('/payout'),
     );
-    assert.ok(submit?.url.startsWith('https://invoicing.staging.tilia-inc.com/v2/acct-payee-1/'));
+    assert.ok(
+      submit?.url.startsWith(
+        'https://invoicing.staging.tilia-inc.com/v2/acct-payee-1/',
+      ),
+    );
     assert.deepEqual(JSON.parse(submit?.body ?? ''), {
       source_payment_method_id: 'pm-wallet-1',
       destination_payment_method_id: 'pm-paypal-1',
@@ -128,7 +143,10 @@ describe('tilia submit', () => {
     await provider.submit(payoutRequest());
 
     const keys = requests
-      .filter((request) => request.method === 'POST' && request.url.includes('/payout'))
+      .filter(
+        (request) =>
+          request.method === 'POST' && request.url.includes('/payout'),
+      )
       .map((request) => request.headers['idempotency-key']);
     assert.equal(keys.length, 2);
     assert.equal(keys[0], keys[1]);
@@ -156,7 +174,10 @@ describe('tilia submit', () => {
 
   test('maps a lost request to INDETERMINATE, never a blind retry signal', async () => {
     const { doFetch } = fakeTilia([
-      { when: (url, method) => url.includes('/payout') && method === 'POST', fail: true },
+      {
+        when: (url, method) => url.includes('/payout') && method === 'POST',
+        fail: true,
+      },
     ]);
 
     const result = await tilia(configWith(doFetch)).submit(payoutRequest());
@@ -165,7 +186,9 @@ describe('tilia submit', () => {
   });
 
   test('maps a terminal 4xx to REJECTED', async () => {
-    const { doFetch } = fakeTilia([submitRoute(422, '{"status":"Unprocessable"}')]);
+    const { doFetch } = fakeTilia([
+      submitRoute(422, '{"status":"Unprocessable"}'),
+    ]);
 
     const result = await tilia(configWith(doFetch)).submit(payoutRequest());
 
@@ -175,8 +198,9 @@ describe('tilia submit', () => {
   test('throws retryable on rate limiting instead of compensating', async () => {
     const { doFetch } = fakeTilia([submitRoute(429, '')]);
 
-    await assert.rejects(tilia(configWith(doFetch)).submit(payoutRequest()), (error: unknown) =>
-      hasCode(error, 'TILIA.RATE_LIMITED'),
+    await assert.rejects(
+      tilia(configWith(doFetch)).submit(payoutRequest()),
+      (error: unknown) => hasCode(error, 'TILIA.RATE_LIMITED'),
     );
   });
 
@@ -207,15 +231,17 @@ describe('tilia auth', () => {
       return { ok: false, status: 404, text: async () => '' };
     };
 
-    await assert.rejects(tilia(configWith(doFetch)).submit(payoutRequest()), (error: unknown) =>
-      hasCode(error, 'TILIA.AUTH_FAILED'),
+    await assert.rejects(
+      tilia(configWith(doFetch)).submit(payoutRequest()),
+      (error: unknown) => hasCode(error, 'TILIA.AUTH_FAILED'),
     );
   });
 });
 
 describe('tilia status', () => {
   const statusRoute = (name: string): Route => ({
-    when: (url, method) => url.includes('/payout/pst-expected-1') && method === 'GET',
+    when: (url, method) =>
+      url.includes('/payout/pst-expected-1') && method === 'GET',
     body: fixture('tilia', name),
   });
   const ref = { provider: 'tilia', id: 'acct-payee-1/pst-expected-1' } as const;
@@ -223,25 +249,35 @@ describe('tilia status', () => {
   test('maps SUCCESS to SETTLED', async () => {
     const { doFetch } = fakeTilia([statusRoute('payout-status-success.json')]);
 
-    assert.deepEqual(await tilia(configWith(doFetch)).status({ ref }), { state: 'SETTLED' });
+    assert.deepEqual(await tilia(configWith(doFetch)).status({ ref }), {
+      state: 'SETTLED',
+    });
   });
 
   test('maps FUNDS-IN-ESCROW to PENDING', async () => {
     const { doFetch } = fakeTilia([statusRoute('payout-status-escrow.json')]);
 
-    assert.deepEqual(await tilia(configWith(doFetch)).status({ ref }), { state: 'PENDING' });
+    assert.deepEqual(await tilia(configWith(doFetch)).status({ ref }), {
+      state: 'PENDING',
+    });
   });
 
   test('maps USER-REVERSED to RETURNED', async () => {
-    const { doFetch } = fakeTilia([statusRoute('payout-status-user-reversed.json')]);
+    const { doFetch } = fakeTilia([
+      statusRoute('payout-status-user-reversed.json'),
+    ]);
 
-    assert.deepEqual(await tilia(configWith(doFetch)).status({ ref }), { state: 'RETURNED' });
+    assert.deepEqual(await tilia(configWith(doFetch)).status({ ref }), {
+      state: 'RETURNED',
+    });
   });
 
   test('maps an unknown payout to UNKNOWN', async () => {
     const { doFetch } = fakeTilia([]);
 
-    assert.deepEqual(await tilia(configWith(doFetch)).status({ ref }), { state: 'UNKNOWN' });
+    assert.deepEqual(await tilia(configWith(doFetch)).status({ ref }), {
+      state: 'UNKNOWN',
+    });
   });
 
   test('maps every documented in-flight status to PENDING, never UNKNOWN', () => {
@@ -265,8 +301,9 @@ describe('tilia status', () => {
   test('refuses a lookup by caller key as unverified', async () => {
     const { doFetch } = fakeTilia([]);
 
-    await assert.rejects(tilia(configWith(doFetch)).status({ key: 'saga-123' }), (error: unknown) =>
-      hasCode(error, 'TILIA.KEY_LOOKUP_UNVERIFIED'),
+    await assert.rejects(
+      tilia(configWith(doFetch)).status({ key: 'saga-123' }),
+      (error: unknown) => hasCode(error, 'TILIA.KEY_LOOKUP_UNVERIFIED'),
     );
   });
 });
@@ -279,7 +316,10 @@ describe('tilia parse', () => {
 
     assert.equal(events.length, 1);
     assert.equal(events[0]?.type, 'SETTLED');
-    assert.deepEqual(events[0]?.ref, { provider: 'tilia', id: 'acct-payee-1/pst-expected-1' });
+    assert.deepEqual(events[0]?.ref, {
+      provider: 'tilia',
+      id: 'acct-payee-1/pst-expected-1',
+    });
   });
 
   test('normalizes a failed payout webhook to a FAILED event carrying the documented failure fields', () => {
@@ -300,13 +340,22 @@ describe('tilia parse', () => {
     const events = provider.parse(webhookOf('webhook-payout-pending.json'));
 
     assert.equal(events[0]?.type, 'PENDING');
-    assert.deepEqual(events[0]?.ref, { provider: 'tilia', id: 'acct-payee-1/pst-expected-1' });
+    assert.deepEqual(events[0]?.ref, {
+      provider: 'tilia',
+      id: 'acct-payee-1/pst-expected-1',
+    });
     assert.equal(events[0]?.failureCode, undefined);
   });
 
   test('normalizes KYC results to payee events', () => {
-    assert.equal(provider.parse(webhookOf('webhook-kyc-cleared.json'))[0]?.type, 'KYC_CLEARED');
-    assert.equal(provider.parse(webhookOf('webhook-kyc-blocked.json'))[0]?.type, 'KYC_BLOCKED');
+    assert.equal(
+      provider.parse(webhookOf('webhook-kyc-cleared.json'))[0]?.type,
+      'KYC_CLEARED',
+    );
+    assert.equal(
+      provider.parse(webhookOf('webhook-kyc-blocked.json'))[0]?.type,
+      'KYC_BLOCKED',
+    );
   });
 
   test('surfaces an unknown event as Unrecognized, never dropped', () => {
@@ -318,7 +367,11 @@ describe('tilia parse', () => {
   });
 
   test('surfaces a body that is not JSON as Unrecognized', () => {
-    const events = provider.parse({ provider: 'tilia', headers: {}, body: 'not json' });
+    const events = provider.parse({
+      provider: 'tilia',
+      headers: {},
+      body: 'not json',
+    });
 
     assert.equal(events[0]?.type, 'Unrecognized');
   });
@@ -333,20 +386,30 @@ describe('tilia payee', () => {
   test('maps ACCEPT to CLEARED', async () => {
     const { doFetch } = fakeTilia([kycRoute('kyc-accept.json')]);
 
-    assert.deepEqual(await tilia(configWith(doFetch)).payee?.status({ userId: 'usr-1' }), {
-      state: 'CLEARED',
-    });
+    assert.deepEqual(
+      await tilia(configWith(doFetch)).payee?.status({ userId: 'usr-1' }),
+      {
+        state: 'CLEARED',
+      },
+    );
   });
 
   test('maps DENY to BLOCKED and PROCESSING to PENDING', async () => {
     const denied = fakeTilia([kycRoute('kyc-deny.json')]);
     const processing = fakeTilia([kycRoute('kyc-processing.json')]);
 
-    assert.deepEqual(await tilia(configWith(denied.doFetch)).payee?.status({ userId: 'usr-1' }), {
-      state: 'BLOCKED',
-    });
     assert.deepEqual(
-      await tilia(configWith(processing.doFetch)).payee?.status({ userId: 'usr-1' }),
+      await tilia(configWith(denied.doFetch)).payee?.status({
+        userId: 'usr-1',
+      }),
+      {
+        state: 'BLOCKED',
+      },
+    );
+    assert.deepEqual(
+      await tilia(configWith(processing.doFetch)).payee?.status({
+        userId: 'usr-1',
+      }),
       { state: 'PENDING' },
     );
   });
@@ -354,26 +417,37 @@ describe('tilia payee', () => {
   test('maps a missing KYC record to NONE', async () => {
     const { doFetch } = fakeTilia([]);
 
-    assert.deepEqual(await tilia(configWith(doFetch)).payee?.status({ userId: 'usr-1' }), {
-      state: 'NONE',
-    });
+    assert.deepEqual(
+      await tilia(configWith(doFetch)).payee?.status({ userId: 'usr-1' }),
+      {
+        state: 'NONE',
+      },
+    );
   });
 
   test('onboarding begins the documented hosted payout flow and returns its redirect', async () => {
     const onboardRoute: Route = {
-      when: (url, method) => url.endsWith('/authorize/user') && method === 'POST',
+      when: (url, method) =>
+        url.endsWith('/authorize/user') && method === 'POST',
       body: fixture('tilia', 'authorize-user.json'),
     };
     const { doFetch, requests } = fakeTilia([onboardRoute]);
 
-    const result = await tilia(configWith(doFetch)).payee!.onboard({ userId: 'usr-1' });
+    const result = await tilia(configWith(doFetch)).payee!.onboard({
+      userId: 'usr-1',
+    });
 
     assert.equal(
       result.hostedUrl,
       'https://pub.tilia-inc.com/testpublisher/txnhistory/133fafce-80ab-42f6-82b1-7266d9bab91d',
     );
-    const call = requests.find((request) => request.url.endsWith('/authorize/user'));
-    assert.equal(call?.url, 'https://auth.staging.tilia-inc.com/authorize/user');
+    const call = requests.find((request) =>
+      request.url.endsWith('/authorize/user'),
+    );
+    assert.equal(
+      call?.url,
+      'https://auth.staging.tilia-inc.com/authorize/user',
+    );
     assert.deepEqual(JSON.parse(call!.body), {
       account_id: 'acct-payee-1',
       mechanism: 'tilia_hosted',
@@ -396,7 +470,8 @@ describe('tilia payee', () => {
 describe('tilia cancel', () => {
   const ref = { provider: 'tilia', id: 'acct-payee-1/pst-expected-1' } as const;
   const cancelRoute = (status: number): Route => ({
-    when: (url, method) => url.includes('/payout/pst-expected-1') && method === 'DELETE',
+    when: (url, method) =>
+      url.includes('/payout/pst-expected-1') && method === 'DELETE',
     status,
     body: '',
   });
@@ -410,7 +485,8 @@ describe('tilia cancel', () => {
     assert.ok(
       requests.some(
         (request) =>
-          request.method === 'DELETE' && request.url.includes('/v2/acct-payee-1/payout/'),
+          request.method === 'DELETE' &&
+          request.url.includes('/v2/acct-payee-1/payout/'),
       ),
     );
   });
@@ -501,7 +577,10 @@ describe('tilia verify', () => {
       }),
       false,
     );
-    assert.equal(await provider.verify({ provider: 'tilia', headers: {}, body }), false);
+    assert.equal(
+      await provider.verify({ provider: 'tilia', headers: {}, body }),
+      false,
+    );
   });
 
   test('the transport scheme accepts everything, by declaration', async () => {

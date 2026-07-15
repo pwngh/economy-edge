@@ -28,15 +28,21 @@ export async function settlementReport(
     params: { type: 'SETTLEMENT', time: window.from, maxresults: '50000' },
   });
   if (call.result === 'failure') {
-    throw fault('STEAM.REPORT_FAILED', 'Steam refused the settlement report request.', {
-      detail: { errorcode: call.errorcode },
-    });
+    throw fault(
+      'STEAM.REPORT_FAILED',
+      'Steam refused the settlement report request.',
+      {
+        detail: { errorcode: call.errorcode },
+      },
+    );
   }
   const orders = call.params.orders;
   if (!Array.isArray(orders)) {
     return [];
   }
-  return orders.filter((order) => withinWindow(order, window)).map((order) => settlementOf(order));
+  return orders
+    .filter((order) => withinWindow(order, window))
+    .map((order) => settlementOf(order));
 }
 
 function withinWindow(order: unknown, window: Window): boolean {
@@ -52,9 +58,13 @@ function settlementOf(order: unknown): CanonicalSettlement {
     items?: unknown;
   };
   if (typeof record.currency !== 'string' || !Array.isArray(record.items)) {
-    throw fault('STEAM.REPORT_MALFORMED', 'A Steam report row is missing required fields.', {
-      detail: { order },
-    });
+    throw fault(
+      'STEAM.REPORT_MALFORMED',
+      'A Steam report row is missing required fields.',
+      {
+        detail: { order },
+      },
+    );
   }
   const transId = idOf(record.transid);
   const gross = money(record.currency, totalOf(record.items));

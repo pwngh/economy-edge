@@ -12,7 +12,11 @@
 import { describe, test } from 'node:test';
 import assert from 'node:assert/strict';
 
-import { base64UrlOfBytes, bytesOfBase64Url, decodeBase64 } from '#src/codec/jwt.ts';
+import {
+  base64UrlOfBytes,
+  bytesOfBase64Url,
+  decodeBase64,
+} from '#src/codec/jwt.ts';
 import { array, check, int, map } from '#test/support/propcheck.ts';
 
 const bytesArbitrary = map(
@@ -47,7 +51,10 @@ describe('base64 codec', () => {
         const bare = padded.replace(/=+$/, '');
         for (const encoding of [padded, bare]) {
           const decoded = decodeBase64(encoding);
-          if (decoded === null || Buffer.compare(Buffer.from(decoded), Buffer.from(bytes)) !== 0) {
+          if (
+            decoded === null ||
+            Buffer.compare(Buffer.from(decoded), Buffer.from(bytes)) !== 0
+          ) {
             return false;
           }
         }
@@ -60,7 +67,10 @@ describe('base64 codec', () => {
   });
 
   test('tolerates whitespace and refuses malformed input with null', () => {
-    assert.deepEqual([...decodeBase64('aGVs bG8=')!], [...Buffer.from('hello')]);
+    assert.deepEqual(
+      [...decodeBase64('aGVs bG8=')!],
+      [...Buffer.from('hello')],
+    );
     assert.equal(decodeBase64('A'), null);
     assert.equal(decodeBase64('!!!!'), null);
     assert.equal(decodeBase64('AB=C'), null);

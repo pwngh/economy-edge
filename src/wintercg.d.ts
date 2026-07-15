@@ -32,7 +32,8 @@ interface CryptoKey {
 
 type BufferSource = ArrayBufferView | ArrayBuffer;
 
-type AlgorithmParams = string | { name: string; hash?: string; namedCurve?: string };
+type AlgorithmParams =
+  string | { name: string; hash?: string; namedCurve?: string };
 
 interface JsonWebKeyLike {
   kty?: string;
@@ -49,7 +50,11 @@ interface JsonWebKeyLike {
 
 interface SubtleCrypto {
   digest(algorithm: AlgorithmParams, data: BufferSource): Promise<ArrayBuffer>;
-  sign(algorithm: AlgorithmParams, key: CryptoKey, data: BufferSource): Promise<ArrayBuffer>;
+  sign(
+    algorithm: AlgorithmParams,
+    key: CryptoKey,
+    data: BufferSource,
+  ): Promise<ArrayBuffer>;
   importKey(
     format: 'jwk',
     keyData: JsonWebKeyLike,
@@ -111,12 +116,18 @@ interface ReadableStreamDefaultReader {
   releaseLock(): void;
 }
 interface ReadableStream {
-  pipeThrough(transform: { readable: ReadableStream; writable: unknown }): ReadableStream;
+  pipeThrough(transform: {
+    readable: ReadableStream;
+    writable: unknown;
+  }): ReadableStream;
   getReader(): ReadableStreamDefaultReader;
 }
 declare const ReadableStream: {
   new (source: {
-    start(controller: { enqueue(chunk: Uint8Array): void; close(): void }): void;
+    start(controller: {
+      enqueue(chunk: Uint8Array): void;
+      close(): void;
+    }): void;
   }): ReadableStream;
 };
 
@@ -124,4 +135,6 @@ interface DecompressionStream {
   readonly readable: ReadableStream;
   readonly writable: unknown;
 }
-declare const DecompressionStream: { new (format: string): DecompressionStream };
+declare const DecompressionStream: {
+  new (format: string): DecompressionStream;
+};

@@ -58,7 +58,8 @@ function pushJwt(claims: Record<string, unknown>): Promise<string> {
 function webhookWith(authorization?: string): RawWebhook {
   return {
     provider: 'google',
-    headers: authorization === undefined ? {} : { Authorization: authorization },
+    headers:
+      authorization === undefined ? {} : { Authorization: authorization },
     body: '{"message":{"data":""}}',
   };
 }
@@ -67,34 +68,54 @@ describe('oidc-jwt scheme', () => {
   test('accepts a push signed by a known key with the right claims', async () => {
     const jwt = await pushJwt({});
 
-    assert.equal(await verifySignature(scheme, webhookWith(`Bearer ${jwt}`)), true);
+    assert.equal(
+      await verifySignature(scheme, webhookWith(`Bearer ${jwt}`)),
+      true,
+    );
   });
 
   test('rejects a wrong audience and a wrong issuer', async () => {
     const wrongAudience = await pushJwt({ aud: 'https://other.example' });
     const wrongIssuer = await pushJwt({ iss: 'https://evil.example' });
 
-    assert.equal(await verifySignature(scheme, webhookWith(`Bearer ${wrongAudience}`)), false);
-    assert.equal(await verifySignature(scheme, webhookWith(`Bearer ${wrongIssuer}`)), false);
+    assert.equal(
+      await verifySignature(scheme, webhookWith(`Bearer ${wrongAudience}`)),
+      false,
+    );
+    assert.equal(
+      await verifySignature(scheme, webhookWith(`Bearer ${wrongIssuer}`)),
+      false,
+    );
   });
 
   test('rejects a token expired beyond the clock-skew window', async () => {
     const expired = await pushJwt({ exp: Math.floor(Date.now() / 1000) - 600 });
 
-    assert.equal(await verifySignature(scheme, webhookWith(`Bearer ${expired}`)), false);
+    assert.equal(
+      await verifySignature(scheme, webhookWith(`Bearer ${expired}`)),
+      false,
+    );
   });
 
   test('tolerates an expiry just past when it falls inside the clock-skew window', async () => {
-    const justExpired = await pushJwt({ exp: Math.floor(Date.now() / 1000) - 60 });
+    const justExpired = await pushJwt({
+      exp: Math.floor(Date.now() / 1000) - 60,
+    });
 
-    assert.equal(await verifySignature(scheme, webhookWith(`Bearer ${justExpired}`)), true);
+    assert.equal(
+      await verifySignature(scheme, webhookWith(`Bearer ${justExpired}`)),
+      true,
+    );
   });
 
   test('tolerates nbf and iat slightly in the future inside the clock-skew window', async () => {
     const soon = Math.floor(Date.now() / 1000) + 60;
     const jwt = await pushJwt({ nbf: soon, iat: soon });
 
-    assert.equal(await verifySignature(scheme, webhookWith(`Bearer ${jwt}`)), true);
+    assert.equal(
+      await verifySignature(scheme, webhookWith(`Bearer ${jwt}`)),
+      true,
+    );
   });
 
   test('rejects nbf or iat in the future beyond the clock-skew window', async () => {
@@ -102,8 +123,14 @@ describe('oidc-jwt scheme', () => {
     const futureNbf = await pushJwt({ nbf: far });
     const futureIat = await pushJwt({ iat: far });
 
-    assert.equal(await verifySignature(scheme, webhookWith(`Bearer ${futureNbf}`)), false);
-    assert.equal(await verifySignature(scheme, webhookWith(`Bearer ${futureIat}`)), false);
+    assert.equal(
+      await verifySignature(scheme, webhookWith(`Bearer ${futureNbf}`)),
+      false,
+    );
+    assert.equal(
+      await verifySignature(scheme, webhookWith(`Bearer ${futureIat}`)),
+      false,
+    );
   });
 
   test('rejects non-numeric exp, nbf, and iat claims', async () => {
@@ -111,9 +138,18 @@ describe('oidc-jwt scheme', () => {
     const badNbf = await pushJwt({ nbf: 'now' });
     const badIat = await pushJwt({ iat: 'now' });
 
-    assert.equal(await verifySignature(scheme, webhookWith(`Bearer ${badExp}`)), false);
-    assert.equal(await verifySignature(scheme, webhookWith(`Bearer ${badNbf}`)), false);
-    assert.equal(await verifySignature(scheme, webhookWith(`Bearer ${badIat}`)), false);
+    assert.equal(
+      await verifySignature(scheme, webhookWith(`Bearer ${badExp}`)),
+      false,
+    );
+    assert.equal(
+      await verifySignature(scheme, webhookWith(`Bearer ${badNbf}`)),
+      false,
+    );
+    assert.equal(
+      await verifySignature(scheme, webhookWith(`Bearer ${badIat}`)),
+      false,
+    );
   });
 
   test('rejects a tampered payload', async () => {
@@ -129,7 +165,10 @@ describe('oidc-jwt scheme', () => {
     ).toString('base64url');
 
     assert.equal(
-      await verifySignature(scheme, webhookWith(`Bearer ${header}.${forgedPayload}.${signature}`)),
+      await verifySignature(
+        scheme,
+        webhookWith(`Bearer ${header}.${forgedPayload}.${signature}`),
+      ),
       false,
     );
   });
@@ -143,15 +182,25 @@ describe('oidc-jwt scheme', () => {
     const jwt = await signJwt({
       algorithm: 'RS256',
       header: { alg: 'RS256', kid: 'push-key-1' },
-      payload: { iss: ISSUER, aud: AUDIENCE, exp: Math.floor(Date.now() / 1000) + 300 },
+      payload: {
+        iss: ISSUER,
+        aud: AUDIENCE,
+        exp: Math.floor(Date.now() / 1000) + 300,
+      },
       privateKeyPem: other.privateKey,
     });
 
-    assert.equal(await verifySignature(scheme, webhookWith(`Bearer ${jwt}`)), false);
+    assert.equal(
+      await verifySignature(scheme, webhookWith(`Bearer ${jwt}`)),
+      false,
+    );
   });
 
   test('rejects a missing or non-bearer authorization header', async () => {
     assert.equal(await verifySignature(scheme, webhookWith()), false);
-    assert.equal(await verifySignature(scheme, webhookWith('Basic dXNlcjpwYXNz')), false);
+    assert.equal(
+      await verifySignature(scheme, webhookWith('Basic dXNlcjpwYXNz')),
+      false,
+    );
   });
 });

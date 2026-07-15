@@ -71,7 +71,10 @@ export async function payeeOnboard(
   const response = await requestJson(doFetch, {
     method: 'POST',
     url: `${tiliaHosts(config.environment).auth}/authorize/user`,
-    headers: { authorization: `Bearer ${token}`, 'content-type': 'application/json' },
+    headers: {
+      authorization: `Bearer ${token}`,
+      'content-type': 'application/json',
+    },
     body: JSON.stringify({
       account_id: payee.accountId,
       mechanism: 'tilia_hosted',

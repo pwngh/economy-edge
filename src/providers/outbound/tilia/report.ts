@@ -14,7 +14,12 @@ import { money } from '../../../canonical/money.ts';
 import { requestJson } from '../../transport.ts';
 import { bearerToken, payloadOf, tiliaHosts } from './auth.ts';
 
-import type { CanonicalSettlement, Money, PayoutReport, Window } from '../../../canonical/index.ts';
+import type {
+  CanonicalSettlement,
+  Money,
+  PayoutReport,
+  Window,
+} from '../../../canonical/index.ts';
 import type { FetchLike } from '../../fetch.ts';
 import type { TiliaConfig } from './config.ts';
 
@@ -53,11 +58,17 @@ async function settledDisbursements(
   }
   const payouts = payloadOf(response.body);
   if (!Array.isArray(payouts)) {
-    throw fault('TILIA.REPORT_MALFORMED', 'The Tilia payouts payload is not an array.');
+    throw fault(
+      'TILIA.REPORT_MALFORMED',
+      'The Tilia payouts payload is not an array.',
+    );
   }
   return payouts
     .map((row) => narrowPayoutRow(row))
-    .filter((row) => row.status === 'SUCCESS' && withinWindow(row.created, input.window))
+    .filter(
+      (row) =>
+        row.status === 'SUCCESS' && withinWindow(row.created, input.window),
+    )
     .map((row) => settlementOf(row));
 }
 
@@ -95,9 +106,13 @@ function narrowPayoutRow(row: unknown): PayoutRow {
       };
     }
   }
-  throw fault('TILIA.REPORT_MALFORMED', 'A Tilia payout row is missing required fields.', {
-    detail: { row },
-  });
+  throw fault(
+    'TILIA.REPORT_MALFORMED',
+    'A Tilia payout row is missing required fields.',
+    {
+      detail: { row },
+    },
+  );
 }
 
 function settlementOf(row: PayoutRow): CanonicalSettlement {
@@ -116,7 +131,10 @@ function settlementOf(row: PayoutRow): CanonicalSettlement {
  * The wallet balance as its own verb: the float check reads one number and
  * should never have to fabricate an empty settlement window to get it.
  */
-export async function walletBalance(config: TiliaConfig, doFetch: FetchLike): Promise<Money> {
+export async function walletBalance(
+  config: TiliaConfig,
+  doFetch: FetchLike,
+): Promise<Money> {
   const token = await bearerToken(config, doFetch);
   return integratorBalance(config, doFetch, token);
 }
@@ -141,8 +159,11 @@ async function integratorBalance(
       },
     );
   }
-  const payload = payloadOf(response.body) as { balances?: Record<string, unknown> } | null;
-  const usd = payload?.balances?.USD as { spendable_balance?: { balance?: unknown } } | undefined;
+  const payload = payloadOf(response.body) as {
+    balances?: Record<string, unknown>;
+  } | null;
+  const usd = payload?.balances?.USD as
+    { spendable_balance?: { balance?: unknown } } | undefined;
   const balance = usd?.spendable_balance?.balance;
   if (typeof balance === 'string' && /^\d+$/.test(balance)) {
     return money('USD', BigInt(balance));

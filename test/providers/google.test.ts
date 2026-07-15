@@ -51,14 +51,18 @@ const acknowledgeRoute = (status = 200) => ({
 });
 
 const purchaseRoute = (body: string, status = 200) => ({
-  when: (url: string, method: string) => url.includes('/tokens/') && method === 'GET',
+  when: (url: string, method: string) =>
+    url.includes('/tokens/') && method === 'GET',
   status,
   body,
 });
 
 const proof = {
   provider: 'google',
-  proof: { productId: 'sku-credits-1200', purchaseToken: 'purchase-token-redacted' },
+  proof: {
+    productId: 'sku-credits-1200',
+    purchaseToken: 'purchase-token-redacted',
+  },
 } as const;
 
 describe('google verify', () => {
@@ -136,15 +140,17 @@ describe('google verify', () => {
       },
     ]);
 
-    await assert.rejects(google(configWith(doFetch)).verify(proof), (error: unknown) =>
-      hasCode(error, 'GOOGLE.AUTH_FAILED'),
+    await assert.rejects(
+      google(configWith(doFetch)).verify(proof),
+      (error: unknown) => hasCode(error, 'GOOGLE.AUTH_FAILED'),
     );
   });
 });
 
 describe('google fulfill', () => {
   const consumeRoute = (status: number) => ({
-    when: (url: string, method: string) => url.includes(':consume') && method === 'POST',
+    when: (url: string, method: string) =>
+      url.includes(':consume') && method === 'POST',
     status,
     body: '',
   });
@@ -177,7 +183,10 @@ describe('google fulfill', () => {
 
 describe('google report', () => {
   const earningsZip = buildZip([
-    { name: 'earnings_202607.csv', content: fixture('google', 'earnings-202607.csv') },
+    {
+      name: 'earnings_202607.csv',
+      content: fixture('google', 'earnings-202607.csv'),
+    },
   ]);
   const zipRoute = {
     when: (url: string) => url.includes('/o/earnings%2Fearnings_202607.zip'),
@@ -202,8 +211,12 @@ describe('google report', () => {
     assert.deepEqual(settlements[0]?.fee, usd('1.50'));
     assert.deepEqual(settlements[0]?.net, usd('8.49'));
     assert.equal(settlements[0]?.granularity, undefined);
-    const download = requests.find((request) => request.url.includes('alt=media'));
-    assert.ok(download?.url.startsWith('https://storage.googleapis.com/storage/v1/b/'));
+    const download = requests.find((request) =>
+      request.url.includes('alt=media'),
+    );
+    assert.ok(
+      download?.url.startsWith('https://storage.googleapis.com/storage/v1/b/'),
+    );
   });
 
   test('skips months whose report is not published yet', async () => {
@@ -304,7 +317,11 @@ describe('google parse', () => {
   });
 
   test('surfaces an undecodable push message as Unrecognized', () => {
-    const events = provider.parse!({ provider: 'google', headers: {}, body: 'not json' });
+    const events = provider.parse!({
+      provider: 'google',
+      headers: {},
+      body: 'not json',
+    });
 
     assert.equal(events[0]?.type, 'Unrecognized');
   });

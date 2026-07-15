@@ -37,20 +37,35 @@ describe('verifySignature', () => {
   test('accepts a payload signed with the shared secret', async () => {
     const body = '{"hello":"world"}';
 
-    assert.equal(await verifySignature(scheme, webhook(body, { 'x-signature': sign(body) })), true);
+    assert.equal(
+      await verifySignature(
+        scheme,
+        webhook(body, { 'x-signature': sign(body) }),
+      ),
+      true,
+    );
   });
 
   test('matches the signature header case-insensitively', async () => {
     const body = '{}';
 
-    assert.equal(await verifySignature(scheme, webhook(body, { 'X-Signature': sign(body) })), true);
+    assert.equal(
+      await verifySignature(
+        scheme,
+        webhook(body, { 'X-Signature': sign(body) }),
+      ),
+      true,
+    );
   });
 
   test('rejects a tampered payload', async () => {
     const signed = sign('{"amount":"1.00"}');
 
     assert.equal(
-      await verifySignature(scheme, webhook('{"amount":"9999.00"}', { 'x-signature': signed })),
+      await verifySignature(
+        scheme,
+        webhook('{"amount":"9999.00"}', { 'x-signature': signed }),
+      ),
       false,
     );
   });
@@ -60,10 +75,16 @@ describe('verifySignature', () => {
   });
 
   test('rejects a signature that is not valid hex', async () => {
-    assert.equal(await verifySignature(scheme, webhook('{}', { 'x-signature': 'zz' })), false);
+    assert.equal(
+      await verifySignature(scheme, webhook('{}', { 'x-signature': 'zz' })),
+      false,
+    );
   });
 
   test('accepts everything under the transport scheme', async () => {
-    assert.equal(await verifySignature({ scheme: 'transport' }, webhook('{}', {})), true);
+    assert.equal(
+      await verifySignature({ scheme: 'transport' }, webhook('{}', {})),
+      true,
+    );
   });
 });

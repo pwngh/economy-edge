@@ -53,8 +53,9 @@ describe('compose', () => {
   test('rejects a call for a provider that is not registered', async () => {
     const edge = compose({ inbound: [fakeInbound({ provider: 'steam' })] });
 
-    await assert.rejects(edge.inbound.verify({ provider: 'meta', proof: {} }), (error: unknown) =>
-      hasCode(error, 'CODEC.UNKNOWN_PROVIDER'),
+    await assert.rejects(
+      edge.inbound.verify({ provider: 'meta', proof: {} }),
+      (error: unknown) => hasCode(error, 'CODEC.UNKNOWN_PROVIDER'),
     );
   });
 
@@ -81,10 +82,10 @@ describe('compose', () => {
 
     const settlements = await edge.inbound.report({ from: 'a', to: 'b' });
 
-    assert.deepEqual(settlements.map((settlement) => settlement.providerTxnId).sort(), [
-      'meta-1',
-      'steam-1',
-    ]);
+    assert.deepEqual(
+      settlements.map((settlement) => settlement.providerTxnId).sort(),
+      ['meta-1', 'steam-1'],
+    );
   });
 
   test('skips providers without a pull report instead of faking one', async () => {
@@ -138,8 +139,9 @@ describe('compose', () => {
     await edge.inbound.fulfill({ provider: 'meta', proof: {} });
 
     assert.deepEqual(fulfilled, ['meta']);
-    await assert.rejects(edge.inbound.fulfill({ provider: 'steam', proof: {} }), (error: unknown) =>
-      hasCode(error, 'CODEC.UNSUPPORTED'),
+    await assert.rejects(
+      edge.inbound.fulfill({ provider: 'steam', proof: {} }),
+      (error: unknown) => hasCode(error, 'CODEC.UNSUPPORTED'),
     );
   });
 
@@ -166,11 +168,15 @@ describe('compose', () => {
 
   test('rejects an unaddressed call with several outbound providers', async () => {
     const edge = compose({
-      outbound: [fakeOutbound({ provider: 'tilia' }), fakeOutbound({ provider: 'meta' })],
+      outbound: [
+        fakeOutbound({ provider: 'tilia' }),
+        fakeOutbound({ provider: 'meta' }),
+      ],
     });
 
-    await assert.rejects(edge.outbound.report({ from: 'a', to: 'b' }), (error: unknown) =>
-      hasCode(error, 'CODEC.AMBIGUOUS_OUTBOUND'),
+    await assert.rejects(
+      edge.outbound.report({ from: 'a', to: 'b' }),
+      (error: unknown) => hasCode(error, 'CODEC.AMBIGUOUS_OUTBOUND'),
     );
   });
 
@@ -197,8 +203,9 @@ describe('compose', () => {
   test('rejects payee calls when the provider does not host onboarding', async () => {
     const edge = compose({ outbound: [fakeOutbound()] });
 
-    await assert.rejects(edge.outbound.payee.status({ userId: 'usr-1' }), (error: unknown) =>
-      hasCode(error, 'CODEC.UNSUPPORTED'),
+    await assert.rejects(
+      edge.outbound.payee.status({ userId: 'usr-1' }),
+      (error: unknown) => hasCode(error, 'CODEC.UNSUPPORTED'),
     );
   });
 

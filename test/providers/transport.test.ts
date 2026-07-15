@@ -42,10 +42,13 @@ describe('requestJson', () => {
   });
 
   test('returns a non-2xx as a value, never a throw', async () => {
-    const response = await requestJson(fetchReturning(409, '{"error":"duplicate"}'), {
-      method: 'POST',
-      url: 'https://provider.example/payout',
-    });
+    const response = await requestJson(
+      fetchReturning(409, '{"error":"duplicate"}'),
+      {
+        method: 'POST',
+        url: 'https://provider.example/payout',
+      },
+    );
 
     assert.equal(response.ok, false);
     assert.equal(response.status, 409);
@@ -57,10 +60,13 @@ describe('requestJson', () => {
       method: 'POST',
       url: 'https://provider.example/ack',
     });
-    const html = await requestJson(fetchReturning(502, '<html>bad gateway</html>'), {
-      method: 'GET',
-      url: 'https://provider.example/txn',
-    });
+    const html = await requestJson(
+      fetchReturning(502, '<html>bad gateway</html>'),
+      {
+        method: 'GET',
+        url: 'https://provider.example/txn',
+      },
+    );
 
     assert.equal(empty.body, null);
     assert.equal(html.body, null);
@@ -73,9 +79,13 @@ describe('requestJson', () => {
     };
 
     await assert.rejects(
-      requestJson(failingFetch, { method: 'GET', url: 'https://provider.example/txn' }),
+      requestJson(failingFetch, {
+        method: 'GET',
+        url: 'https://provider.example/txn',
+      }),
       (error: unknown) =>
-        hasCode(error, 'TRANSPORT.REQUEST_FAILED') && (error as { retryable: boolean }).retryable,
+        hasCode(error, 'TRANSPORT.REQUEST_FAILED') &&
+        (error as { retryable: boolean }).retryable,
     );
   });
 
@@ -89,7 +99,10 @@ describe('requestJson', () => {
     });
 
     await assert.rejects(
-      requestJson(unreadable, { method: 'GET', url: 'https://provider.example/txn' }),
+      requestJson(unreadable, {
+        method: 'GET',
+        url: 'https://provider.example/txn',
+      }),
       (error: unknown) => hasCode(error, 'TRANSPORT.RESPONSE_UNREADABLE'),
     );
   });
@@ -100,9 +113,13 @@ describe('requestJson', () => {
     };
 
     await assert.rejects(
-      requestJson(timingOut, { method: 'GET', url: 'https://provider.example/txn' }),
+      requestJson(timingOut, {
+        method: 'GET',
+        url: 'https://provider.example/txn',
+      }),
       (error: unknown) =>
-        hasCode(error, 'TRANSPORT.TIMED_OUT') && (error as { retryable: boolean }).retryable,
+        hasCode(error, 'TRANSPORT.TIMED_OUT') &&
+        (error as { retryable: boolean }).retryable,
     );
   });
 });
@@ -153,7 +170,8 @@ describe('withRequestTimeout', () => {
           url: 'https://provider.example/txn',
         }),
         (error: unknown) =>
-          hasCode(error, 'TRANSPORT.TIMED_OUT') && (error as { retryable: boolean }).retryable,
+          hasCode(error, 'TRANSPORT.TIMED_OUT') &&
+          (error as { retryable: boolean }).retryable,
       );
     } finally {
       clearTimeout(keepEventLoopAlive);

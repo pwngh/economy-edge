@@ -43,7 +43,11 @@ const purchasedRoute = (body: string) => ({
 
 const proof = {
   provider: 'pico',
-  proof: { userAccessToken: 'user-token', userId: 'usr-1', sku: 'sku-credits-1200' },
+  proof: {
+    userAccessToken: 'user-token',
+    userId: 'usr-1',
+    sku: 'sku-credits-1200',
+  },
 } as const;
 
 describe('pico verify', () => {
@@ -61,13 +65,17 @@ describe('pico verify', () => {
       assert.equal(outcome.value.occurredAt, '2025-07-03T00:00:00.000Z');
       assert.deepEqual(outcome.value.amount, usd('9.99'));
     }
-    const purchased = requests.find((request) => request.url.includes('/user/purchased'));
+    const purchased = requests.find((request) =>
+      request.url.includes('/user/purchased'),
+    );
     assert.ok(purchased?.url.startsWith('https://platform-us.picovr.com/'));
     assert.ok(purchased?.body.includes('PICO|app-1|secret-1'));
   });
 
   test('rejects the captured not-authorized envelope, which arrives as HTTP 200', async () => {
-    const { doFetch } = fakeFetch([verifyRoute(fixture('pico', 'error-not-authorized.json'))]);
+    const { doFetch } = fakeFetch([
+      verifyRoute(fixture('pico', 'error-not-authorized.json')),
+    ]);
 
     const outcome = await pico(configWith(doFetch)).verify(proof);
 
@@ -76,7 +84,9 @@ describe('pico verify', () => {
 
   test('rejects RETRYABLE on the documented rate-limit code', async () => {
     const { doFetch } = fakeFetch([
-      verifyRoute('{"code":10016,"em":"Too many requests.","trace_id":"t","data":{}}'),
+      verifyRoute(
+        '{"code":10016,"em":"Too many requests.","trace_id":"t","data":{}}',
+      ),
     ]);
 
     const outcome = await pico(configWith(doFetch)).verify(proof);
@@ -99,7 +109,10 @@ describe('pico verify', () => {
     const { doFetch } = fakeFetch([]);
 
     await assert.rejects(
-      pico(configWith(doFetch)).verify({ provider: 'pico', proof: { sku: 'x' } }),
+      pico(configWith(doFetch)).verify({
+        provider: 'pico',
+        proof: { sku: 'x' },
+      }),
       (error: unknown) => hasCode(error, 'PICO.MALFORMED_PROOF'),
     );
   });
@@ -112,7 +125,9 @@ describe('pico fulfill', () => {
   });
 
   test('consumes the purchase as the fulfillment claim', async () => {
-    const { doFetch } = fakeFetch([consumeRoute(fixture('pico', 'consume-ok.json'))]);
+    const { doFetch } = fakeFetch([
+      consumeRoute(fixture('pico', 'consume-ok.json')),
+    ]);
 
     const outcome = await pico(configWith(doFetch)).fulfill!(proof);
 
@@ -121,7 +136,9 @@ describe('pico fulfill', () => {
 
   test('rejects the documented cannot-be-consumed code as a value', async () => {
     const { doFetch } = fakeFetch([
-      consumeRoute('{"code":10502,"em":"Item can not be consumed.","trace_id":"t","data":{}}'),
+      consumeRoute(
+        '{"code":10502,"em":"Item can not be consumed.","trace_id":"t","data":{}}',
+      ),
     ]);
 
     const outcome = await pico(configWith(doFetch)).fulfill!(proof);
@@ -131,7 +148,9 @@ describe('pico fulfill', () => {
 
   test('rejects RETRYABLE on the rate-limit code', async () => {
     const { doFetch } = fakeFetch([
-      consumeRoute('{"code":10016,"em":"Too many requests.","trace_id":"t","data":{}}'),
+      consumeRoute(
+        '{"code":10016,"em":"Too many requests.","trace_id":"t","data":{}}',
+      ),
     ]);
 
     const outcome = await pico(configWith(doFetch)).fulfill!(proof);
@@ -144,8 +163,11 @@ describe('pico status', () => {
   test('answers UNKNOWN because PICO documents no per-transaction query', async () => {
     const provider = pico(configWith(fakeFetch([]).doFetch));
 
-    assert.deepEqual(await provider.status({ provider: 'pico', providerTxnId: 'x' }), {
-      state: 'UNKNOWN',
-    });
+    assert.deepEqual(
+      await provider.status({ provider: 'pico', providerTxnId: 'x' }),
+      {
+        state: 'UNKNOWN',
+      },
+    );
   });
 });

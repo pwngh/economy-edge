@@ -45,10 +45,16 @@ export interface CanonicalPayoutEvent {
   readonly raw?: unknown;
 }
 
-export function unrecognizedEvent(provider: ProviderId, raw: unknown): CanonicalEvent {
+export function unrecognizedEvent(
+  provider: ProviderId,
+  raw: unknown,
+): CanonicalEvent {
   return { schemaVersion: 1, type: 'Unrecognized', provider, raw };
 }
 
-export function unrecognizedPayoutEvent(provider: ProviderId, raw: unknown): CanonicalPayoutEvent {
+export function unrecognizedPayoutEvent(
+  provider: ProviderId,
+  raw: unknown,
+): CanonicalPayoutEvent {
   return { schemaVersion: 1, type: 'Unrecognized', provider, raw };
 }

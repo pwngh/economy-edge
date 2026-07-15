@@ -45,7 +45,9 @@ export async function zipEntries(
   for (let index = 0; index < count; index += 1) {
     const entry = directoryEntry(view, offset);
     entries.push({
-      name: new TextDecoder().decode(bytes.slice(offset + 46, offset + 46 + entry.nameLength)),
+      name: new TextDecoder().decode(
+        bytes.slice(offset + 46, offset + 46 + entry.nameLength),
+      ),
       bytes: await entryBytes(bytes, view, entry, maxEntryBytes),
     });
     offset += 46 + entry.nameLength + entry.extraLength + entry.commentLength;
@@ -119,8 +121,15 @@ async function entryBytes(
 }
 
 function findEndRecord(view: DataView): number {
-  for (let offset = view.byteLength - END_RECORD_SIZE; offset >= 0; offset -= 1) {
-    if (view.getUint32(offset, true) === END_OF_CENTRAL_DIRECTORY && reachesEnd(view, offset)) {
+  for (
+    let offset = view.byteLength - END_RECORD_SIZE;
+    offset >= 0;
+    offset -= 1
+  ) {
+    if (
+      view.getUint32(offset, true) === END_OF_CENTRAL_DIRECTORY &&
+      reachesEnd(view, offset)
+    ) {
       return offset;
     }
   }
@@ -147,11 +156,18 @@ function readUint32(view: DataView, offset: number): number {
 }
 
 function unsupportedZip64(): Fault {
-  return fault('ARCHIVE.UNSUPPORTED', 'The ZIP archive uses zip64, which is unsupported.');
+  return fault(
+    'ARCHIVE.UNSUPPORTED',
+    'The ZIP archive uses zip64, which is unsupported.',
+  );
 }
 
 function malformed(reason: string): Fault {
-  return fault('ARCHIVE.MALFORMED', `The ZIP archive is malformed: ${reason}.`, {
-    detail: { reason },
-  });
+  return fault(
+    'ARCHIVE.MALFORMED',
+    `The ZIP archive is malformed: ${reason}.`,
+    {
+      detail: { reason },
+    },
+  );
 }

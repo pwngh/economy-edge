@@ -76,25 +76,42 @@ export function decodeBase64(base64: string): Uint8Array | null {
   }
 }
 
-async function importPrivateKey(algorithm: 'RS256' | 'ES256', pem: string): Promise<CryptoKey> {
+async function importPrivateKey(
+  algorithm: 'RS256' | 'ES256',
+  pem: string,
+): Promise<CryptoKey> {
   const params =
     algorithm === 'RS256'
       ? { name: 'RSASSA-PKCS1-v1_5', hash: 'SHA-256' }
       : { name: 'ECDSA', namedCurve: 'P-256' };
   try {
-    return await crypto.subtle.importKey('pkcs8', pemBytes(pem), params, false, ['sign']);
+    return await crypto.subtle.importKey(
+      'pkcs8',
+      pemBytes(pem),
+      params,
+      false,
+      ['sign'],
+    );
   } catch (error) {
     if (hasCode(error, 'JWT.MALFORMED_KEY')) {
       throw error;
     }
-    throw fault('JWT.MALFORMED_KEY', 'The private key did not import for signing.', {
-      cause: error,
-    });
+    throw fault(
+      'JWT.MALFORMED_KEY',
+      'The private key did not import for signing.',
+      {
+        cause: error,
+      },
+    );
   }
 }
 
-function signParams(algorithm: 'RS256' | 'ES256'): string | { name: string; hash: string } {
-  return algorithm === 'RS256' ? 'RSASSA-PKCS1-v1_5' : { name: 'ECDSA', hash: 'SHA-256' };
+function signParams(
+  algorithm: 'RS256' | 'ES256',
+): string | { name: string; hash: string } {
+  return algorithm === 'RS256'
+    ? 'RSASSA-PKCS1-v1_5'
+    : { name: 'ECDSA', hash: 'SHA-256' };
 }
 
 function pemBytes(pem: string): Uint8Array {
@@ -105,13 +122,18 @@ function pemBytes(pem: string): Uint8Array {
   try {
     return bytesOfBase64(base64);
   } catch (error) {
-    throw fault('JWT.MALFORMED_KEY', 'The private key PEM body is not valid base64.', {
-      cause: error,
-    });
+    throw fault(
+      'JWT.MALFORMED_KEY',
+      'The private key PEM body is not valid base64.',
+      {
+        cause: error,
+      },
+    );
   }
 }
 
-const BASE64_URL_ALPHABET = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_';
+const BASE64_URL_ALPHABET =
+  'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_';
 
 function bytesOfBase64(base64: string): Uint8Array {
   const binary = atob(base64);
@@ -126,7 +148,8 @@ export function base64UrlOfBytes(bytes: Uint8Array): string {
   let encoded = '';
   const full = bytes.length - (bytes.length % 3);
   for (let index = 0; index < full; index += 3) {
-    const chunk = (bytes[index]! << 16) | (bytes[index + 1]! << 8) | bytes[index + 2]!;
+    const chunk =
+      (bytes[index]! << 16) | (bytes[index + 1]! << 8) | bytes[index + 2]!;
     encoded +=
       BASE64_URL_ALPHABET[chunk >>> 18]! +
       BASE64_URL_ALPHABET[(chunk >>> 12) & 63]! +
@@ -135,7 +158,9 @@ export function base64UrlOfBytes(bytes: Uint8Array): string {
   }
   if (bytes.length - full === 1) {
     const chunk = bytes[full]! << 16;
-    encoded += BASE64_URL_ALPHABET[chunk >>> 18]! + BASE64_URL_ALPHABET[(chunk >>> 12) & 63]!;
+    encoded +=
+      BASE64_URL_ALPHABET[chunk >>> 18]! +
+      BASE64_URL_ALPHABET[(chunk >>> 12) & 63]!;
   }
   if (bytes.length - full === 2) {
     const chunk = (bytes[full]! << 16) | (bytes[full + 1]! << 8);

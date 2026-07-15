@@ -44,8 +44,14 @@ describe('tiliaScenario fidelity against the real adapter', () => {
     const rejected = tiliaScenario({ submit: 'rejected' });
     const request = { key: 'pay-1', payee: 'usr-1', amount: usd('2.00') };
 
-    assert.equal((await tilia(indeterminate.config).submit(request)).outcome, 'INDETERMINATE');
-    assert.equal((await tilia(rejected.config).submit(request)).outcome, 'REJECTED');
+    assert.equal(
+      (await tilia(indeterminate.config).submit(request)).outcome,
+      'INDETERMINATE',
+    );
+    assert.equal(
+      (await tilia(rejected.config).submit(request)).outcome,
+      'REJECTED',
+    );
   });
 
   test('every status option maps to that canonical state through the real adapter', async () => {
@@ -66,7 +72,10 @@ describe('tiliaScenario fidelity against the real adapter', () => {
   });
 
   test('report through the scenario yields the disbursement and the wallet balance', async () => {
-    const scenario = tiliaScenario({ disbursed: '3.50', walletBalance: '42.00' });
+    const scenario = tiliaScenario({
+      disbursed: '3.50',
+      walletBalance: '42.00',
+    });
 
     const report = await tilia(scenario.config).report(scenario.window);
 
@@ -80,7 +89,12 @@ describe('tiliaScenario fidelity against the real adapter', () => {
     const scenario = tiliaScenario();
     const adapter = tilia(scenario.config);
 
-    for (const outcome of ['SETTLED', 'RETURNED', 'FAILED', 'PENDING'] as const) {
+    for (const outcome of [
+      'SETTLED',
+      'RETURNED',
+      'FAILED',
+      'PENDING',
+    ] as const) {
       const events = adapter.parse({
         provider: 'tilia',
         headers: {},
@@ -96,7 +110,9 @@ describe('tiliaScenario fidelity against the real adapter', () => {
   test('payee onboarding through the scenario returns the hosted redirect', async () => {
     const scenario = tiliaScenario();
 
-    const onboard = await tilia(scenario.config).payee!.onboard({ userId: 'usr-1' });
+    const onboard = await tilia(scenario.config).payee!.onboard({
+      userId: 'usr-1',
+    });
 
     assert.equal(
       onboard.hostedUrl,
@@ -114,7 +130,9 @@ describe('tiliaScenario fidelity against the real adapter', () => {
     for (const state of states) {
       const scenario = tiliaScenario({ kyc: state });
 
-      const payee = await tilia(scenario.config).payee!.status({ userId: 'usr-1' });
+      const payee = await tilia(scenario.config).payee!.status({
+        userId: 'usr-1',
+      });
 
       assert.equal(payee.state, state);
     }
@@ -126,7 +144,10 @@ describe('exported fakes honor the port contracts', () => {
     const adapter = fakeInbound();
 
     const verified = await adapter.verify({ provider: 'steam', proof: {} });
-    const status = await adapter.status({ provider: 'steam', providerTxnId: 'txn-1' });
+    const status = await adapter.status({
+      provider: 'steam',
+      providerTxnId: 'txn-1',
+    });
 
     assert.equal(verified.ok, true);
     assert.equal(verified.ok && verified.value.schemaVersion, 1);
@@ -151,8 +172,15 @@ describe('exported fakes honor the port contracts', () => {
   test('fakeOutbound submit and report answer with contract-shaped values', async () => {
     const adapter = fakeOutbound();
 
-    const result = await adapter.submit({ key: 'k', payee: 'usr-1', amount: usd('1.00') });
-    const report = await adapter.report({ from: '2026-07-01', to: '2026-07-02' });
+    const result = await adapter.submit({
+      key: 'k',
+      payee: 'usr-1',
+      amount: usd('1.00'),
+    });
+    const report = await adapter.report({
+      from: '2026-07-01',
+      to: '2026-07-02',
+    });
 
     assert.equal(result.outcome, 'ACCEPTED');
     assert.deepEqual(report.disbursements, []);

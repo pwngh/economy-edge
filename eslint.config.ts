@@ -24,11 +24,13 @@ const BANNED_GLOBALS = [
   },
   {
     name: 'setInterval',
-    message: 'The codec holds nothing and schedules nothing; timers are the caller’s.',
+    message:
+      'The codec holds nothing and schedules nothing; timers are the caller’s.',
   },
   {
     name: 'setTimeout',
-    message: 'The codec holds nothing and schedules nothing; timers are the caller’s.',
+    message:
+      'The codec holds nothing and schedules nothing; timers are the caller’s.',
   },
   {
     name: 'EventEmitter',
@@ -36,14 +38,16 @@ const BANNED_GLOBALS = [
   },
   {
     name: 'performance',
-    message: 'The codec does not measure time; performance.now diverges across runtimes.',
+    message:
+      'The codec does not measure time; performance.now diverges across runtimes.',
   },
 ];
 
 const NON_SHIPPED_IMPORTS = [
   {
     regex: '^#test/',
-    message: 'Production code (src/) must not import test code (#test/*); it is dev-only.',
+    message:
+      'Production code (src/) must not import test code (#test/*); it is dev-only.',
   },
 ];
 
@@ -68,14 +72,20 @@ export default tseslint.config(
       'no-console': ['error', { allow: ['warn', 'error'] }],
       'prefer-const': 'error',
       'no-var': 'error',
-      '@typescript-eslint/no-unused-vars': ['error', { argsIgnorePattern: '^_' }],
+      '@typescript-eslint/no-unused-vars': [
+        'error',
+        { argsIgnorePattern: '^_' },
+      ],
       'n/no-missing-import': 'off',
       'n/no-unpublished-import': 'off',
       'n/no-extraneous-import': 'off',
       'n/no-unsupported-features/node-builtins': 'off',
       complexity: ['error', 15],
       'max-depth': ['error', 4],
-      'max-lines-per-function': ['error', { max: 80, skipBlankLines: true, skipComments: true }],
+      'max-lines-per-function': [
+        'error',
+        { max: 80, skipBlankLines: true, skipComments: true },
+      ],
       'max-params': ['error', 4],
       'max-nested-callbacks': ['error', 3],
     },

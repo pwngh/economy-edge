@@ -25,7 +25,9 @@ export function fault(
   } = {},
 ): Fault {
   const error =
-    options.cause === undefined ? new Error(message) : new Error(message, { cause: options.cause });
+    options.cause === undefined
+      ? new Error(message)
+      : new Error(message, { cause: options.cause });
   return Object.assign(error, {
     code,
     retryable: options.retryable ?? false,

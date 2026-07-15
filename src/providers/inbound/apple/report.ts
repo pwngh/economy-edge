@@ -76,7 +76,9 @@ async function dailyReport(
       },
     );
   }
-  return new TextDecoder().decode(await decompressBytes(response.bytes, 'gzip'));
+  return new TextDecoder().decode(
+    await decompressBytes(response.bytes, 'gzip'),
+  );
 }
 
 function settlementsOf(tsv: string, day: string): CanonicalSettlement[] {
@@ -89,16 +91,33 @@ function settlementsOf(tsv: string, day: string): CanonicalSettlement[] {
   const proceeds = columnIndex(header, 'Developer Proceeds');
   const currency = columnIndex(header, 'Currency of Proceeds');
   const country = columnIndex(header, 'Country Code');
-  if (sku === null || units === null || proceeds === null || currency === null) {
-    throw fault('APPLE.REPORT_MALFORMED', 'The sales report is missing required columns.', {
-      detail: { header },
-    });
+  if (
+    sku === null ||
+    units === null ||
+    proceeds === null ||
+    currency === null
+  ) {
+    throw fault(
+      'APPLE.REPORT_MALFORMED',
+      'The sales report is missing required columns.',
+      {
+        detail: { header },
+      },
+    );
   }
   return rows
-    .filter((row) => (row[sku] ?? '').length > 0 && !Number.isNaN(Number(row[units])))
+    .filter(
+      (row) => (row[sku] ?? '').length > 0 && !Number.isNaN(Number(row[units])),
+    )
     .map((row) => {
-      const perUnit = moneyFromDecimal(row[proceeds] ?? '0', row[currency] ?? 'USD');
-      const net = money(perUnit.currency, perUnit.minor * BigInt(Number(row[units])));
+      const perUnit = moneyFromDecimal(
+        row[proceeds] ?? '0',
+        row[currency] ?? 'USD',
+      );
+      const net = money(
+        perUnit.currency,
+        perUnit.minor * BigInt(Number(row[units])),
+      );
       const region = country === null ? 'ALL' : (row[country] ?? 'ALL');
       return {
         schemaVersion: 1 as const,
@@ -119,9 +138,13 @@ function daysInWindow(window: Window): string[] {
   for (let at = from; at <= to; at += 86_400_000) {
     days.push(new Date(at).toISOString().slice(0, 10));
     if (days.length > 31) {
-      throw fault('APPLE.REPORT_WINDOW_TOO_WIDE', 'Sales pulls cover at most 31 days.', {
-        detail: { window },
-      });
+      throw fault(
+        'APPLE.REPORT_WINDOW_TOO_WIDE',
+        'Sales pulls cover at most 31 days.',
+        {
+          detail: { window },
+        },
+      );
     }
   }
   return days;

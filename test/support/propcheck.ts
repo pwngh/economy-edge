@@ -55,7 +55,10 @@ export function choice<T>(...values: T[]): Arbitrary<T> {
   };
 }
 
-export function array<T>(element: Arbitrary<T>, maxLength: number): Arbitrary<T[]> {
+export function array<T>(
+  element: Arbitrary<T>,
+  maxLength: number,
+): Arbitrary<T[]> {
   return {
     generate: (rng) => {
       const length = Math.floor(rng() * (maxLength + 1));
@@ -80,7 +83,11 @@ export function array<T>(element: Arbitrary<T>, maxLength: number): Arbitrary<T[
       }
       for (let index = 0; index < value.length; index += 1) {
         for (const shrunk of element.shrink(value[index]!)) {
-          out.push([...value.slice(0, index), shrunk, ...value.slice(index + 1)]);
+          out.push([
+            ...value.slice(0, index),
+            shrunk,
+            ...value.slice(index + 1),
+          ]);
         }
       }
       return out;
@@ -102,7 +109,8 @@ export function map<T, U>(
 export type Property<T> = (value: T) => boolean;
 
 export type Report<T> =
-  { ok: true; runs: number } | { ok: false; seed: number; counterexample: T; shrinks: number };
+  | { ok: true; runs: number }
+  | { ok: false; seed: number; counterexample: T; shrinks: number };
 
 export function minimize<T>(
   arbitrary: Arbitrary<T>,
