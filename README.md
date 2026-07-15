@@ -1,23 +1,51 @@
 # economy-edge
 
-The boundary between external payment providers and a ledger. Five inbound rails
-(Steam, Meta, Google Play, Apple, PICO) and one outbound payout rail (Tilia)
-each speak their own dialect; this package translates all of them into one
-canonical vocabulary — verifying purchases, submitting payouts, parsing webhooks,
-and pulling settlement reports — so the ledger behind it never learns any provider's
-API.
+The boundary between payment providers and your ledger.
 
-The package is stateless: it holds no money, no records, and no connections. It has
-zero runtime dependencies and uses only the cross-runtime web globals (`fetch`,
-`crypto.subtle`, `DecompressionStream`), so it runs on Node, Bun, Deno, and
-Cloudflare Workers alike. It is not yet published to npm — consume it from a
-checkout after `npm run build`; consumers import the compiled `dist/`.
+Five inbound rails — Steam, Meta, Google Play, Apple, PICO — and one outbound
+payout rail, Tilia, each speak their own API. economy-edge turns all of them into
+one vocabulary: verify a purchase, submit a payout, parse a webhook, pull a
+settlement report. The ledger behind it never learns any provider's API.
+
+It's stateless — no money, no records, no connections. Zero runtime dependencies,
+and only the cross-runtime web globals (`fetch`, `crypto.subtle`,
+`DecompressionStream`), so the same code runs on Node, Bun, Deno, and Cloudflare
+Workers.
+
+## Usage
+
+Each provider is a factory: give it config, get an adapter back. `compose` routes
+each call to the right one. Nothing reads the environment — you pass every
+credential in.
+
+```ts
+import { compose } from '@pwngh/economy-edge';
+import { steam } from '@pwngh/economy-edge/providers/inbound/steam';
+import { tilia } from '@pwngh/economy-edge/providers/outbound/tilia';
+
+const edge = compose({
+  inbound: [
+    steam({ publisherWebApiKey, appId: 438100, environment: 'production' }),
+  ],
+  outbound: [
+    tilia({
+      environment: 'production',
+      clientId,
+      clientSecret /* + payee + webhook config */,
+    }),
+  ],
+});
+```
+
+`compose` does no I/O, and there's nothing to close.
+
+Not on npm yet — consume it from a checkout: run `npm run build`, then import the
+compiled `dist/`.
 
 ## Documentation
 
-Consumer guides live in [docs/](docs/README.md): getting started, the canonical
-vocabulary, money in, money out, webhooks, reconciliation, and per-provider
-reference.
+Guides in [docs/](docs/README.md): getting started, the vocabulary, money in, money
+out, webhooks, reconciliation, and a page per provider.
 
 ## License
 
