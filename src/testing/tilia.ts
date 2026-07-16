@@ -57,7 +57,34 @@ export function tiliaScenario(
   options: TiliaScenarioOptions = {},
 ): TiliaScenario {
   const hosts = tiliaHosts('staging');
-  const { doFetch, requests } = fakeFetch([
+  const { doFetch, requests } = fakeFetch(scenarioRoutes(hosts, options));
+  return {
+    config: {
+      environment: 'staging',
+      clientId: 'client-scenario',
+      clientSecret: 'secret-scenario',
+      integratorAccountId: ACCOUNT_ID,
+      resolvePayee: async () => ({
+        accountId: ACCOUNT_ID,
+        sourcePaymentMethodId: 'pm-source-scenario',
+        destinationPaymentMethodId: 'pm-destination-scenario',
+      }),
+      webhookVerification: options.webhookVerification ?? {
+        scheme: 'transport',
+      },
+      fetch: doFetch,
+    },
+    ref: { provider: 'tilia', id: `${ACCOUNT_ID}/${PAYOUT_STATUS_ID}` },
+    window: { from: '2026-07-01T00:00:00', to: '2026-07-02T00:00:00' },
+    requests,
+  };
+}
+
+function scenarioRoutes(
+  hosts: ReturnType<typeof tiliaHosts>,
+  options: TiliaScenarioOptions,
+): Route[] {
+  return [
     {
       when: (url) => url === `${hosts.auth}/token`,
       body: JSON.stringify({ access_token: 'token-scenario' }),
@@ -127,27 +154,7 @@ export function tiliaScenario(
         },
       }),
     },
-  ]);
-  return {
-    config: {
-      environment: 'staging',
-      clientId: 'client-scenario',
-      clientSecret: 'secret-scenario',
-      integratorAccountId: ACCOUNT_ID,
-      resolvePayee: async () => ({
-        accountId: ACCOUNT_ID,
-        sourcePaymentMethodId: 'pm-source-scenario',
-        destinationPaymentMethodId: 'pm-destination-scenario',
-      }),
-      webhookVerification: options.webhookVerification ?? {
-        scheme: 'transport',
-      },
-      fetch: doFetch,
-    },
-    ref: { provider: 'tilia', id: `${ACCOUNT_ID}/${PAYOUT_STATUS_ID}` },
-    window: { from: '2026-07-01T00:00:00', to: '2026-07-02T00:00:00' },
-    requests,
-  };
+  ];
 }
 
 export function tiliaPayoutWebhookBody(
